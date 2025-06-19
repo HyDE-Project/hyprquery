@@ -25,7 +25,7 @@ A command-line utility for querying configuration values from Hyprland and hyprl
 
 ```bash
 # Clone the repository
-git clone https://github.com/username/hyprquery.git
+git clone https://github.com/HyDE-Project/hyprquery.git
 cd hyprquery
 
 # Create build directory
@@ -89,6 +89,24 @@ Arch Linux:
 ```
 # Coming soon
 ```
+
+Nix:
+
+```bash
+# Install temporarily
+nix shell github:HyDE-Project/hyprquery
+
+# Install permanently  
+nix profile install github:HyDE-Project/hyprquery
+
+# Development shell
+nix develop
+
+# For legacy Nix
+nix-shell nix/shell.nix
+```
+
+See `nix/README.md` for detailed Nix installation options including NixOS and Home Manager configurations.
 
 ## Usage
 
