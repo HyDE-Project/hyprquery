@@ -19,11 +19,7 @@
 //! let path = fetch::get_cached_schema_path()?;
 //! ```
 
-use std::{
-    fs,
-    io::Write,
-    path::PathBuf
-};
+use std::{fs, io::Write, path::PathBuf};
 
 use masterror::prelude::*;
 
@@ -54,9 +50,8 @@ pub fn get_cache_dir() -> Result<PathBuf, AppError> {
         .join(CACHE_DIR_NAME);
 
     if !cache_dir.exists() {
-        fs::create_dir_all(&cache_dir).map_err(|e| {
-            AppError::internal(format!("Failed to create cache directory: {e}"))
-        })?;
+        fs::create_dir_all(&cache_dir)
+            .map_err(|e| AppError::internal(format!("Failed to create cache directory: {e}")))?;
     }
 
     Ok(cache_dir)
@@ -111,23 +106,21 @@ pub fn has_cached_schema() -> bool {
 /// println!("Schema cached at: {}", path.display());
 /// ```
 pub fn fetch_schema() -> Result<PathBuf, AppError> {
-    let response = ureq::get(SCHEMA_URL).call().map_err(|e| {
-        AppError::internal(format!("Failed to fetch schema: {e}"))
-    })?;
+    let response = ureq::get(SCHEMA_URL)
+        .call()
+        .map_err(|e| AppError::internal(format!("Failed to fetch schema: {e}")))?;
 
-    let body = response.into_string().map_err(|e| {
-        AppError::internal(format!("Failed to read schema response: {e}"))
-    })?;
+    let body = response
+        .into_string()
+        .map_err(|e| AppError::internal(format!("Failed to read schema response: {e}")))?;
 
     let cache_path = get_cached_schema_path()?;
 
-    let mut file = fs::File::create(&cache_path).map_err(|e| {
-        AppError::internal(format!("Failed to create schema file: {e}"))
-    })?;
+    let mut file = fs::File::create(&cache_path)
+        .map_err(|e| AppError::internal(format!("Failed to create schema file: {e}")))?;
 
-    file.write_all(body.as_bytes()).map_err(|e| {
-        AppError::internal(format!("Failed to write schema file: {e}"))
-    })?;
+    file.write_all(body.as_bytes())
+        .map_err(|e| AppError::internal(format!("Failed to write schema file: {e}")))?;
 
     Ok(cache_path)
 }
@@ -187,10 +180,7 @@ mod tests {
     fn test_resolve_schema_path_custom() {
         let result = resolve_schema_path("/custom/path/schema.json");
         assert!(result.is_ok());
-        assert_eq!(
-            result.unwrap(),
-            PathBuf::from("/custom/path/schema.json")
-        );
+        assert_eq!(result.unwrap(), PathBuf::from("/custom/path/schema.json"));
     }
 
     #[test]
