@@ -2,6 +2,8 @@
 
 # Hydequery
 
+[![CI](https://github.com/HyDE-Project/hyprquery/actions/workflows/ci.yml/badge.svg)](https://github.com/HyDE-Project/hyprquery/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/HyDE-Project/hyprquery/graph/badge.svg)](https://codecov.io/gh/HyDE-Project/hyprquery)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 [![Rust](https://img.shields.io/badge/Rust-2024-orange.svg)](https://www.rust-lang.org/)
 
