@@ -32,7 +32,8 @@ sudo cp target/release/hydequery /usr/local/bin/
 
 ### Requirements
 
-- Rust 2024 edition (nightly)
+- Rust stable (2024 edition)
+- Rust nightly (for formatting only)
 
 ## Usage
 
