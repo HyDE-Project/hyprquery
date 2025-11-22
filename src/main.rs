@@ -1,107 +1,25 @@
+mod cli;
 mod error;
 mod export;
 mod path;
 mod query;
 mod schema;
+mod source;
+mod value;
 
-use std::{
-    collections::{HashSet, hash_map::DefaultHasher},
-    fs,
-    hash::{Hash, Hasher},
-    path::{Path, PathBuf},
-    process
-};
+use std::{collections::HashSet, fs, path::PathBuf, process};
 
 use clap::Parser;
 use error::AppError;
 use export::{export_env, export_json, export_plain};
 use hyprlang::{Config, ConfigOptions};
-use path::{normalize_path, resolve_glob};
+use path::normalize_path;
 use query::{QueryResult, normalize_type, parse_query_inputs};
 use regex::Regex;
+use source::parse_sources_recursive;
+use value::{config_value_to_string, config_value_type_name, hash_string};
 
-/// A command-line utility for querying configuration values from Hyprland
-/// configuration files
-#[derive(Parser, Debug)]
-#[command(name = "hyprquery")]
-#[command(version)]
-#[command(about = "A configuration parser for hypr* config files")]
-struct Args {
-    /// Query to execute (format: query[expectedType][expectedRegex])
-    #[arg(short = 'Q', long = "query", required = true, num_args = 1..)]
-    queries: Vec<String>,
-
-    /// Configuration file path
-    #[arg(required = true)]
-    config_file: String,
-
-    /// Schema file path
-    #[arg(long)]
-    schema: Option<String>,
-
-    /// Allow missing values (don't fail with exit code 1)
-    #[arg(long)]
-    allow_missing: bool,
-
-    /// Get default keys from schema
-    #[arg(long)]
-    get_defaults: bool,
-
-    /// Enable strict mode validation
-    #[arg(long)]
-    strict: bool,
-
-    /// Export format: json or env
-    #[arg(long)]
-    export: Option<String>,
-
-    /// Follow source directives in config files
-    #[arg(short = 's', long)]
-    source: bool,
-
-    /// Enable debug logging
-    #[arg(long)]
-    debug: bool,
-
-    /// Delimiter for plain output
-    #[arg(short = 'D', long, default_value = "\n")]
-    delimiter: String
-}
-
-/// Hash a string to create unique dynamic variable keys
-fn hash_string(s: &str) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    s.hash(&mut hasher);
-    hasher.finish()
-}
-
-/// Convert ConfigValue to string representation
-fn config_value_to_string(value: &hyprlang::ConfigValue) -> String {
-    match value {
-        hyprlang::ConfigValue::Int(i) => i.to_string(),
-        hyprlang::ConfigValue::Float(f) => f.to_string(),
-        hyprlang::ConfigValue::String(s) => s.clone(),
-        hyprlang::ConfigValue::Vec2(v) => format!("{}, {}", v.x, v.y),
-        hyprlang::ConfigValue::Color(c) => format!("rgba({}, {}, {}, {})", c.r, c.g, c.b, c.a),
-        hyprlang::ConfigValue::Custom {
-            ..
-        } => "custom".to_string()
-    }
-}
-
-/// Get type name for ConfigValue
-fn config_value_type_name(value: &hyprlang::ConfigValue) -> &'static str {
-    match value {
-        hyprlang::ConfigValue::Int(_) => "INT",
-        hyprlang::ConfigValue::Float(_) => "FLOAT",
-        hyprlang::ConfigValue::String(_) => "STRING",
-        hyprlang::ConfigValue::Vec2(_) => "VEC2",
-        hyprlang::ConfigValue::Color(_) => "COLOR",
-        hyprlang::ConfigValue::Custom {
-            ..
-        } => "CUSTOM"
-    }
-}
+use crate::cli::Args;
 
 /// Main application logic
 fn run() -> Result<i32, AppError> {
@@ -317,67 +235,6 @@ fn apply_filters<'a>(
     }
 
     Ok((value, type_str))
-}
-
-/// Recursively parse source directives from config files
-fn parse_sources_recursive(
-    config: &mut Config,
-    config_path: &Path,
-    base_dir: &Path,
-    visited: &mut HashSet<PathBuf>,
-    debug: bool
-) -> Result<(), AppError> {
-    let content = fs::read_to_string(config_path)?;
-
-    for line in content.lines() {
-        let trimmed = line.trim();
-
-        if !trimmed.starts_with("source") {
-            continue;
-        }
-
-        let Some(eq_pos) = trimmed.find('=') else {
-            continue;
-        };
-
-        let path_part = trimmed[eq_pos + 1..].trim();
-        let paths = resolve_glob(path_part, base_dir)?;
-
-        for source_path in paths {
-            if !source_path.exists() || !source_path.is_file() {
-                continue;
-            }
-
-            let canonical = match source_path.canonicalize() {
-                Ok(p) => p,
-                Err(_) => source_path.clone()
-            };
-
-            if visited.contains(&canonical) {
-                if debug {
-                    eprintln!("[debug] Skipping already visited: {}", canonical.display());
-                }
-                continue;
-            }
-
-            visited.insert(canonical.clone());
-
-            if debug {
-                eprintln!("[debug] Parsing source: {}", source_path.display());
-            }
-
-            let _ = config.parse_file(&source_path);
-
-            let source_dir = match source_path.parent() {
-                Some(p) => p.to_path_buf(),
-                None => base_dir.to_path_buf()
-            };
-
-            parse_sources_recursive(config, &source_path, &source_dir, visited, debug)?;
-        }
-    }
-
-    Ok(())
 }
 
 fn main() {
