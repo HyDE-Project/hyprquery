@@ -13,8 +13,9 @@ use std::{
 };
 
 use hyprlang::Config;
+use masterror::AppError;
 
-use crate::{error::AppError, path::resolve_glob};
+use crate::path::resolve_glob;
 
 /// Recursively parse source directives from configuration files.
 ///
@@ -40,7 +41,7 @@ pub fn parse_sources_recursive(
     visited: &mut HashSet<PathBuf>,
     debug: bool
 ) -> Result<(), AppError> {
-    let content = fs::read_to_string(config_path)?;
+    let content = fs::read_to_string(config_path).map_err(crate::error::from_io)?;
 
     for line in content.lines() {
         let trimmed = line.trim();

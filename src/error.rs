@@ -1,125 +1,98 @@
 //! Error types and handling for hyprquery.
 //!
-//! This module provides a unified error type [`AppError`] that wraps
-//! the `masterror` crate's error handling functionality.
+//! This module provides error handling using the `masterror` crate's
+//! builder pattern API. All errors are categorized by kind and include
+//! descriptive messages for debugging.
 //!
-//! All errors are categorized by kind (NotFound, BadRequest, Internal)
-//! and include descriptive messages for debugging.
+//! # Error Kinds
+//!
+//! - `NotFound` - Configuration or schema file not found
+//! - `BadRequest` - Invalid input (parse errors, invalid queries)
+//! - `Internal` - IO and other internal errors
 
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use masterror::prelude::*;
 
-use masterror::{AppError as MasterError, AppErrorKind};
-
-/// Application error type for hyprquery.
+/// Create a "configuration file not found" error.
 ///
-/// Wraps various error kinds with descriptive messages.
-/// Implements conversions from common error types like `io::Error`,
-/// `regex::Error`, and `glob::PatternError`.
-#[derive(Debug)]
-pub struct AppError {
-    /// Inner masterror instance
-    inner: MasterError
+/// # Arguments
+///
+/// * `path` - Path to the missing configuration file
+pub fn config_not_found(path: &str) -> AppError {
+    AppError::not_found(format!("Configuration file not found: {path}"))
 }
 
-impl AppError {
-    /// Configuration file not found
-    pub fn config_not_found(path: &str) -> Self {
-        Self {
-            inner: MasterError::new(
-                AppErrorKind::NotFound,
-                format!("Configuration file not found: {path}")
-            )
-        }
-    }
-
-    /// Schema file not found
-    pub fn schema_not_found(path: &str) -> Self {
-        Self {
-            inner: MasterError::new(
-                AppErrorKind::NotFound,
-                format!("Schema file not found: {path}")
-            )
-        }
-    }
-
-    /// Config parse error
-    pub fn config_parse(msg: &str) -> Self {
-        Self {
-            inner: MasterError::new(
-                AppErrorKind::BadRequest,
-                format!("Failed to parse configuration: {msg}")
-            )
-        }
-    }
-
-    /// Schema parse error
-    pub fn schema_parse(msg: &str) -> Self {
-        Self {
-            inner: MasterError::new(
-                AppErrorKind::BadRequest,
-                format!("Failed to parse schema: {msg}")
-            )
-        }
-    }
-
-    /// Invalid query format
-    pub fn invalid_query(msg: &str) -> Self {
-        Self {
-            inner: MasterError::new(
-                AppErrorKind::BadRequest,
-                format!("Invalid query format: {msg}")
-            )
-        }
-    }
-
-    /// IO error
-    pub fn io(msg: &str) -> Self {
-        Self {
-            inner: MasterError::new(AppErrorKind::Internal, format!("IO error: {msg}"))
-        }
-    }
-
-    /// Path resolution error
-    pub fn path_resolution(msg: &str) -> Self {
-        Self {
-            inner: MasterError::new(
-                AppErrorKind::BadRequest,
-                format!("Path resolution error: {msg}")
-            )
-        }
-    }
+/// Create a "schema file not found" error.
+///
+/// # Arguments
+///
+/// * `path` - Path to the missing schema file
+pub fn schema_not_found(path: &str) -> AppError {
+    AppError::not_found(format!("Schema file not found: {path}"))
 }
 
-impl Display for AppError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self.inner)
-    }
+/// Create a configuration parse error.
+///
+/// # Arguments
+///
+/// * `msg` - Parse error message
+pub fn config_parse(msg: &str) -> AppError {
+    AppError::bad_request(format!("Failed to parse configuration: {msg}"))
 }
 
-impl std::error::Error for AppError {}
-
-impl From<std::io::Error> for AppError {
-    fn from(err: std::io::Error) -> Self {
-        Self::io(&err.to_string())
-    }
+/// Create a schema parse error.
+///
+/// # Arguments
+///
+/// * `msg` - Parse error message
+pub fn schema_parse(msg: &str) -> AppError {
+    AppError::bad_request(format!("Failed to parse schema: {msg}"))
 }
 
-impl From<serde_json::Error> for AppError {
-    fn from(err: serde_json::Error) -> Self {
-        Self::schema_parse(&err.to_string())
-    }
+/// Create an invalid query error.
+///
+/// # Arguments
+///
+/// * `msg` - Error message describing the invalid query
+pub fn invalid_query(msg: &str) -> AppError {
+    AppError::bad_request(format!("Invalid query format: {msg}"))
 }
 
-impl From<glob::PatternError> for AppError {
-    fn from(err: glob::PatternError) -> Self {
-        Self::path_resolution(&err.to_string())
-    }
+/// Create an IO error.
+///
+/// # Arguments
+///
+/// * `msg` - IO error message
+pub fn io_error(msg: &str) -> AppError {
+    AppError::internal(format!("IO error: {msg}"))
 }
 
-impl From<regex::Error> for AppError {
-    fn from(err: regex::Error) -> Self {
-        Self::invalid_query(&err.to_string())
-    }
+/// Create a path resolution error.
+///
+/// # Arguments
+///
+/// * `msg` - Path resolution error message
+pub fn path_resolution(msg: &str) -> AppError {
+    AppError::bad_request(format!("Path resolution error: {msg}"))
+}
+
+/// Convert std::io::Error to AppError.
+pub fn from_io(err: std::io::Error) -> AppError {
+    io_error(&err.to_string())
+}
+
+/// Convert serde_json::Error to AppError.
+pub fn from_json(err: serde_json::Error) -> AppError {
+    schema_parse(&err.to_string())
+}
+
+/// Convert glob::PatternError to AppError.
+pub fn from_glob(err: glob::PatternError) -> AppError {
+    path_resolution(&err.to_string())
+}
+
+/// Convert regex::Error to AppError.
+pub fn from_regex(err: regex::Error) -> AppError {
+    invalid_query(&err.to_string())
 }
 
 #[cfg(test)]
@@ -128,67 +101,58 @@ mod tests {
 
     #[test]
     fn test_config_not_found() {
-        let err = AppError::config_not_found("/test/path");
-        let msg = err.to_string();
-        assert!(!msg.is_empty());
+        let err = config_not_found("/test/path");
+        assert!(!err.to_string().is_empty());
     }
 
     #[test]
     fn test_schema_not_found() {
-        let err = AppError::schema_not_found("/schema/path");
-        let msg = err.to_string();
-        assert!(!msg.is_empty());
+        let err = schema_not_found("/schema/path");
+        assert!(!err.to_string().is_empty());
     }
 
     #[test]
     fn test_config_parse() {
-        let err = AppError::config_parse("syntax error");
-        let msg = err.to_string();
-        assert!(!msg.is_empty());
+        let err = config_parse("syntax error");
+        assert!(!err.to_string().is_empty());
     }
 
     #[test]
     fn test_invalid_query() {
-        let err = AppError::invalid_query("bad format");
-        let msg = err.to_string();
-        assert!(!msg.is_empty());
+        let err = invalid_query("bad format");
+        assert!(!err.to_string().is_empty());
     }
 
     #[test]
     fn test_io_error() {
-        let err = AppError::io("read failed");
-        let msg = err.to_string();
-        assert!(!msg.is_empty());
+        let err = io_error("read failed");
+        assert!(!err.to_string().is_empty());
     }
 
     #[test]
     fn test_path_resolution() {
-        let err = AppError::path_resolution("invalid path");
-        let msg = err.to_string();
-        assert!(!msg.is_empty());
+        let err = path_resolution("invalid path");
+        assert!(!err.to_string().is_empty());
     }
 
     #[test]
     fn test_from_io_error() {
         let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
-        let app_err: AppError = io_err.into();
-        let msg = app_err.to_string();
-        assert!(!msg.is_empty());
+        let app_err = from_io(io_err);
+        assert!(!app_err.to_string().is_empty());
     }
 
     #[test]
     fn test_from_glob_error() {
         let glob_err = glob::Pattern::new("[").unwrap_err();
-        let app_err: AppError = glob_err.into();
-        let msg = app_err.to_string();
-        assert!(!msg.is_empty());
+        let app_err = from_glob(glob_err);
+        assert!(!app_err.to_string().is_empty());
     }
 
     #[test]
     fn test_from_regex_error() {
         let regex_err = regex::Regex::new("[").unwrap_err();
-        let app_err: AppError = regex_err.into();
-        let msg = app_err.to_string();
-        assert!(!msg.is_empty());
+        let app_err = from_regex(regex_err);
+        assert!(!app_err.to_string().is_empty());
     }
 }

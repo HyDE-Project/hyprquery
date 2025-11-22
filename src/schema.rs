@@ -9,10 +9,11 @@
 use std::{fs::File, io::BufReader, path::Path};
 
 use hyprlang::{Config, ConfigValue, Vec2};
+use masterror::AppError;
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::error::AppError;
+use crate::error;
 
 /// Schema option data containing the default value.
 #[derive(Debug, Deserialize)]
@@ -61,10 +62,10 @@ pub struct Schema {
 /// Returns error if file cannot be read or parsed
 pub fn load_schema(config: &mut Config, schema_path: &Path) -> Result<(), AppError> {
     let file = File::open(schema_path)
-        .map_err(|_| AppError::schema_not_found(&schema_path.display().to_string()))?;
+        .map_err(|_| error::schema_not_found(&schema_path.display().to_string()))?;
 
     let reader = BufReader::new(file);
-    let schema: Schema = serde_json::from_reader(reader)?;
+    let schema: Schema = serde_json::from_reader(reader).map_err(error::from_json)?;
 
     for option in schema.hyprlang_schema {
         if let Some(default) = option.data.default {
@@ -121,10 +122,10 @@ pub fn load_schema(config: &mut Config, schema_path: &Path) -> Result<(), AppErr
 /// Returns error if file cannot be read or parsed
 pub fn get_schema_keys(schema_path: &Path) -> Result<Vec<String>, AppError> {
     let file = File::open(schema_path)
-        .map_err(|_| AppError::schema_not_found(&schema_path.display().to_string()))?;
+        .map_err(|_| error::schema_not_found(&schema_path.display().to_string()))?;
 
     let reader = BufReader::new(file);
-    let schema: Schema = serde_json::from_reader(reader)?;
+    let schema: Schema = serde_json::from_reader(reader).map_err(error::from_json)?;
 
     let keys = schema
         .hyprlang_schema

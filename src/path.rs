@@ -8,7 +8,9 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::error::AppError;
+use masterror::AppError;
+
+use crate::error;
 
 /// Normalize and expand a file path
 ///
@@ -39,13 +41,15 @@ pub fn normalize_path(path: &str) -> Result<PathBuf, AppError> {
     }
 
     let expanded = shellexpand::full(&processed)
-        .map_err(|e| AppError::path_resolution(&e.to_string()))?
+        .map_err(|e| error::path_resolution(&e.to_string()))?
         .to_string();
 
     let path_buf = PathBuf::from(&expanded);
 
     let absolute = if path_buf.is_relative() {
-        std::env::current_dir()?.join(&path_buf)
+        std::env::current_dir()
+            .map_err(error::from_io)?
+            .join(&path_buf)
     } else {
         path_buf
     };
@@ -53,7 +57,7 @@ pub fn normalize_path(path: &str) -> Result<PathBuf, AppError> {
     if absolute.exists() {
         absolute
             .canonicalize()
-            .map_err(|e| AppError::path_resolution(&e.to_string()))
+            .map_err(|e| error::path_resolution(&e.to_string()))
     } else {
         Ok(absolute)
     }
@@ -75,7 +79,7 @@ pub fn normalize_path(path: &str) -> Result<PathBuf, AppError> {
 /// Returns error if glob pattern is invalid
 pub fn resolve_glob(pattern: &str, base_dir: &Path) -> Result<Vec<PathBuf>, AppError> {
     let expanded = shellexpand::full(pattern)
-        .map_err(|e| AppError::path_resolution(&e.to_string()))?
+        .map_err(|e| error::path_resolution(&e.to_string()))?
         .to_string();
 
     let full_pattern = if expanded.starts_with('/') || expanded.starts_with('~') {
@@ -84,7 +88,10 @@ pub fn resolve_glob(pattern: &str, base_dir: &Path) -> Result<Vec<PathBuf>, AppE
         base_dir.join(&expanded).display().to_string()
     };
 
-    let paths: Vec<PathBuf> = glob::glob(&full_pattern)?.filter_map(Result::ok).collect();
+    let paths: Vec<PathBuf> = glob::glob(&full_pattern)
+        .map_err(error::from_glob)?
+        .filter_map(Result::ok)
+        .collect();
 
     if paths.is_empty() {
         let fallback = PathBuf::from(&full_pattern);

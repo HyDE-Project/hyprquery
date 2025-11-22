@@ -12,11 +12,12 @@ use std::{collections::HashSet, fs, path::PathBuf};
 
 use clap::Parser;
 use hyprlang::{Config, ConfigOptions};
+use masterror::AppError;
 use regex::Regex;
 
 use crate::{
     cli::Args,
-    error::AppError,
+    error,
     export::{export_env, export_json, export_plain},
     path::normalize_path,
     query::{QueryResult, normalize_type, parse_query_inputs},
@@ -48,9 +49,7 @@ pub fn run() -> Result<i32, AppError> {
 
     let config_path = normalize_path(&args.config_file)?;
     if !config_path.exists() {
-        return Err(AppError::config_not_found(
-            &config_path.display().to_string()
-        ));
+        return Err(error::config_not_found(&config_path.display().to_string()));
     }
 
     let config_dir = match config_path.parent() {
@@ -73,7 +72,7 @@ pub fn run() -> Result<i32, AppError> {
     let mut config = Config::with_options(options);
 
     if has_dynamic {
-        let mut content = fs::read_to_string(&config_path)?;
+        let mut content = fs::read_to_string(&config_path).map_err(error::from_io)?;
 
         for query in &queries {
             if query.is_dynamic_variable {
@@ -93,7 +92,7 @@ pub fn run() -> Result<i32, AppError> {
                 eprintln!("[debug] Parse error: {}", e);
             }
             if args.strict {
-                return Err(AppError::config_parse(&e.to_string()));
+                return Err(error::config_parse(&e.to_string()));
             }
         }
     } else {
@@ -103,7 +102,7 @@ pub fn run() -> Result<i32, AppError> {
                 eprintln!("[debug] Parse error: {}", e);
             }
             if args.strict {
-                return Err(AppError::config_parse(&e.to_string()));
+                return Err(error::config_parse(&e.to_string()));
             }
         }
     }
@@ -111,9 +110,7 @@ pub fn run() -> Result<i32, AppError> {
     if let Some(ref schema_path_str) = args.schema {
         let schema_path = normalize_path(schema_path_str)?;
         if !schema_path.exists() {
-            return Err(AppError::schema_not_found(
-                &schema_path.display().to_string()
-            ));
+            return Err(error::schema_not_found(&schema_path.display().to_string()));
         }
         schema::load_schema(&mut config, &schema_path)?;
     }
@@ -215,16 +212,14 @@ fn handle_get_defaults(args: &Args) -> Result<i32, AppError> {
     let schema_path = match &args.schema {
         Some(path) => normalize_path(path)?,
         None => {
-            return Err(AppError::schema_not_found(
+            return Err(error::schema_not_found(
                 "Schema file required for --get-defaults"
             ));
         }
     };
 
     if !schema_path.exists() {
-        return Err(AppError::schema_not_found(
-            &schema_path.display().to_string()
-        ));
+        return Err(error::schema_not_found(&schema_path.display().to_string()));
     }
 
     let keys = schema::get_schema_keys(&schema_path)?;
@@ -283,7 +278,7 @@ fn apply_filters(
     }
 
     if let Some(pattern) = expected_regex {
-        let rx = Regex::new(pattern)?;
+        let rx = Regex::new(pattern).map_err(error::from_regex)?;
         if !rx.is_match(&value) {
             return Ok((String::new(), "NULL"));
         }
