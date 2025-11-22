@@ -1,7 +1,14 @@
+//! Command-line interface definitions for hyprquery.
+//!
+//! This module defines the CLI argument structure using the `clap` derive API.
+//! All command-line options and flags are documented and validated by clap.
+
 use clap::Parser;
 
-/// A command-line utility for querying configuration values from Hyprland
-/// configuration files
+/// Command-line arguments for hyprquery.
+///
+/// Defines all available options, flags, and positional arguments.
+/// Uses clap's derive API for automatic parsing and help generation.
 #[derive(Parser, Debug)]
 #[command(name = "hyprquery")]
 #[command(version)]
@@ -11,7 +18,7 @@ pub struct Args {
     #[arg(required = true)]
     pub config_file: String,
 
-    /// Query to execute (format: query[expectedType][expectedRegex])
+    /// Query to execute (format: `query[expectedType][expectedRegex]`)
     #[arg(short = 'Q', long = "query", required = true, num_args = 1..)]
     pub queries: Vec<String>,
 

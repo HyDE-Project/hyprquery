@@ -1,12 +1,24 @@
+//! Output formatting and export functions for hyprquery.
+//!
+//! This module provides functions to format query results in various formats:
+//! - Plain text with configurable delimiter
+//! - JSON (single object or array)
+//! - Environment variable assignments
+//!
+//! All output is written to stdout.
+
 use serde_json::{Value, json};
 
 use crate::query::{QueryInput, QueryResult};
 
-/// Export results as JSON to stdout
+/// Export results as JSON to stdout.
+///
+/// Outputs a single JSON object for single results, or an array for multiple.
+/// NULL values are represented as JSON `null`.
 ///
 /// # Arguments
 ///
-/// * `results` - Vector of query results to export
+/// * `results` - Query results to export
 pub fn export_json(results: &[QueryResult]) {
     let json_results: Vec<Value> = results
         .iter()
@@ -32,11 +44,18 @@ pub fn export_json(results: &[QueryResult]) {
     }
 }
 
-/// Export results as environment variables to stdout
+/// Export results as shell environment variable assignments.
+///
+/// Converts query keys to valid variable names by:
+/// - Removing leading `$` from dynamic variables
+/// - Replacing `:` with `_`
+/// - Converting to uppercase
+///
+/// NULL values are skipped (no output).
 ///
 /// # Arguments
 ///
-/// * `results` - Vector of query results to export
+/// * `results` - Query results to export
 /// * `queries` - Original query inputs for variable naming
 pub fn export_env(results: &[QueryResult], queries: &[QueryInput]) {
     for (i, result) in results.iter().enumerate() {
@@ -54,12 +73,15 @@ pub fn export_env(results: &[QueryResult], queries: &[QueryInput]) {
     }
 }
 
-/// Export results as plain text with delimiter
+/// Export results as plain text with configurable delimiter.
+///
+/// Each value is output separated by the specified delimiter.
+/// NULL values are represented as empty strings.
 ///
 /// # Arguments
 ///
-/// * `results` - Vector of query results to export
-/// * `delimiter` - Delimiter between values
+/// * `results` - Query results to export
+/// * `delimiter` - String to insert between values (default: newline)
 pub fn export_plain(results: &[QueryResult], delimiter: &str) {
     let output: Vec<&str> = results
         .iter()

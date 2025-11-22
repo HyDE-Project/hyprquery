@@ -1,3 +1,13 @@
+//! Core application logic for hyprquery.
+//!
+//! This module contains the main execution flow, including:
+//! - Configuration file parsing and validation
+//! - Query processing and value resolution
+//! - Type and regex filtering
+//! - Result formatting and output
+//!
+//! The [`run`] function serves as the primary entry point for the application.
+
 use std::{collections::HashSet, fs, path::PathBuf};
 
 use clap::Parser;
@@ -15,7 +25,24 @@ use crate::{
     value::{config_value_to_string, config_value_type_name, hash_string}
 };
 
-/// Main application logic
+/// Execute the main application logic.
+///
+/// Parses command-line arguments, loads configuration files, processes queries,
+/// and outputs results in the requested format.
+///
+/// # Returns
+///
+/// - `Ok(0)` - All queries resolved successfully
+/// - `Ok(1)` - One or more queries returned NULL (unless `--allow-missing` is
+///   set)
+/// - `Err(AppError)` - Fatal error occurred during execution
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Configuration file not found or cannot be parsed
+/// - Schema file not found or invalid
+/// - Invalid regex pattern in query
 pub fn run() -> Result<i32, AppError> {
     let args = Args::parse();
 
@@ -168,7 +195,22 @@ pub fn run() -> Result<i32, AppError> {
     }
 }
 
-/// Handle --get-defaults flag to output all schema keys
+/// Handle the `--get-defaults` flag to output all schema keys.
+///
+/// Reads the schema file and outputs all defined configuration keys,
+/// either as plain text (one per line) or as JSON array.
+///
+/// # Arguments
+///
+/// * `args` - Parsed command-line arguments
+///
+/// # Returns
+///
+/// Always returns `Ok(0)` on success.
+///
+/// # Errors
+///
+/// Returns an error if schema file is not specified or cannot be read.
 fn handle_get_defaults(args: &Args) -> Result<i32, AppError> {
     let schema_path = match &args.schema {
         Some(path) => normalize_path(path)?,
@@ -208,7 +250,26 @@ fn handle_get_defaults(args: &Args) -> Result<i32, AppError> {
     Ok(0)
 }
 
-/// Apply type and regex filters to a value
+/// Apply type and regex filters to a configuration value.
+///
+/// Validates that the value matches the expected type and regex pattern.
+/// If validation fails, returns an empty string with NULL type.
+///
+/// # Arguments
+///
+/// * `value` - The resolved configuration value
+/// * `type_str` - The actual type of the value (INT, FLOAT, STRING, etc.)
+/// * `expected_type` - Optional expected type to match against
+/// * `expected_regex` - Optional regex pattern the value must match
+///
+/// # Returns
+///
+/// A tuple of (filtered_value, type_str). If filters don't match,
+/// returns ("", "NULL").
+///
+/// # Errors
+///
+/// Returns an error if the regex pattern is invalid.
 fn apply_filters(
     value: String,
     type_str: &'static str,

@@ -1,3 +1,11 @@
+//! Path normalization and glob pattern resolution.
+//!
+//! This module handles path manipulation for configuration files:
+//! - Tilde (`~`) expansion to home directory
+//! - Environment variable expansion
+//! - Relative to absolute path conversion
+//! - Glob pattern matching for source directives
+
 use std::path::{Path, PathBuf};
 
 use crate::error::AppError;

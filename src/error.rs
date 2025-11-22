@@ -1,10 +1,23 @@
+//! Error types and handling for hyprquery.
+//!
+//! This module provides a unified error type [`AppError`] that wraps
+//! the `masterror` crate's error handling functionality.
+//!
+//! All errors are categorized by kind (NotFound, BadRequest, Internal)
+//! and include descriptive messages for debugging.
+
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use masterror::{AppError as MasterError, AppErrorKind};
 
-/// Application error wrapper for hyprquery
+/// Application error type for hyprquery.
+///
+/// Wraps various error kinds with descriptive messages.
+/// Implements conversions from common error types like `io::Error`,
+/// `regex::Error`, and `glob::PatternError`.
 #[derive(Debug)]
 pub struct AppError {
+    /// Inner masterror instance
     inner: MasterError
 }
 

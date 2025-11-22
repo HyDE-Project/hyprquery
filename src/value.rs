@@ -1,16 +1,50 @@
+//! Configuration value conversion and utility functions.
+//!
+//! This module provides helper functions for working with hyprlang ConfigValue:
+//! - String conversion for all value types
+//! - Type name extraction
+//! - Hashing for dynamic variable key generation
+
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher}
 };
 
-/// Hash a string to create unique dynamic variable keys
+/// Hash a string to create a unique identifier.
+///
+/// Used for generating unique keys for dynamic variable lookups.
+/// Uses the default hasher for consistent results within a single run.
+///
+/// # Arguments
+///
+/// * `s` - String to hash
+///
+/// # Returns
+///
+/// A 64-bit hash value.
 pub fn hash_string(s: &str) -> u64 {
     let mut hasher = DefaultHasher::new();
     s.hash(&mut hasher);
     hasher.finish()
 }
 
-/// Convert ConfigValue to string representation
+/// Convert a ConfigValue to its string representation.
+///
+/// Handles all hyprlang value types:
+/// - `Int` - Decimal string
+/// - `Float` - Decimal string with fractional part
+/// - `String` - The string value itself
+/// - `Vec2` - Format: `x, y`
+/// - `Color` - Format: `rgba(r, g, b, a)`
+/// - `Custom` - Returns `"custom"`
+///
+/// # Arguments
+///
+/// * `value` - The ConfigValue to convert
+///
+/// # Returns
+///
+/// String representation of the value.
 pub fn config_value_to_string(value: &hyprlang::ConfigValue) -> String {
     match value {
         hyprlang::ConfigValue::Int(i) => i.to_string(),
@@ -24,7 +58,18 @@ pub fn config_value_to_string(value: &hyprlang::ConfigValue) -> String {
     }
 }
 
-/// Get type name for ConfigValue
+/// Get the type name for a ConfigValue.
+///
+/// Returns a static string representing the value's type,
+/// used for type filtering and output formatting.
+///
+/// # Arguments
+///
+/// * `value` - The ConfigValue to inspect
+///
+/// # Returns
+///
+/// One of: `"INT"`, `"FLOAT"`, `"STRING"`, `"VEC2"`, `"COLOR"`, `"CUSTOM"`
 pub fn config_value_type_name(value: &hyprlang::ConfigValue) -> &'static str {
     match value {
         hyprlang::ConfigValue::Int(_) => "INT",

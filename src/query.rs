@@ -1,4 +1,16 @@
-/// Input query with optional type and regex hints
+//! Query parsing and result types for hyprquery.
+//!
+//! This module handles the parsing of query strings in the format:
+//! `key[expectedType][expectedRegex]`
+//!
+//! Query components:
+//! - `key` - The configuration key to look up (e.g., `general:border_size`)
+//! - `expectedType` - Optional type filter (INT, FLOAT, STRING, etc.)
+//! - `expectedRegex` - Optional regex pattern the value must match
+
+/// Parsed query input with optional type and regex hints.
+///
+/// Represents a single query after parsing the `key[type][regex]` format.
 #[derive(Debug, Clone)]
 pub struct QueryInput {
     /// The query key to look up
@@ -11,14 +23,18 @@ pub struct QueryInput {
     pub is_dynamic_variable: bool
 }
 
-/// Result of a configuration query
+/// Result of a configuration query.
+///
+/// Contains the resolved value and its type information.
+/// Uses `Box<str>` for memory efficiency since values are not modified after
+/// creation.
 #[derive(Debug, Clone)]
 pub struct QueryResult {
     /// The original query key
     pub key:        Box<str>,
-    /// The resolved value as string
+    /// The resolved value as string (empty for NULL)
     pub value:      Box<str>,
-    /// The type of the value
+    /// The type of the value (INT, FLOAT, STRING, VEC2, COLOR, CUSTOM, NULL)
     pub value_type: &'static str
 }
 

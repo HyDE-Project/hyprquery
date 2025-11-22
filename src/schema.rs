@@ -1,3 +1,11 @@
+//! Schema loading and default value registration.
+//!
+//! This module handles JSON schema files that define configuration defaults.
+//! Schema format follows the Hyprland schema specification with:
+//! - Configuration key paths
+//! - Value types (INT, FLOAT, STRING, VECTOR, etc.)
+//! - Default values
+
 use std::{fs::File, io::BufReader, path::Path};
 
 use hyprlang::{Config, ConfigValue, Vec2};
@@ -6,29 +14,34 @@ use serde_json::Value;
 
 use crate::error::AppError;
 
-/// Schema option data with default value
+/// Schema option data containing the default value.
 #[derive(Debug, Deserialize)]
 pub struct SchemaData {
-    /// Default value for the option
+    /// Default value for the option (JSON value)
     pub default: Option<Value>
 }
 
-/// Single schema option definition
+/// Single schema option definition.
+///
+/// Represents one configuration key with its type and default value.
 #[derive(Debug, Deserialize)]
 pub struct SchemaOption {
-    /// Configuration key path
+    /// Configuration key path (e.g., `general:border_size`)
     pub value:       String,
-    /// Type of the value (INT, FLOAT, STRING, etc.)
+    /// Type of the value (INT, FLOAT, STRING, VECTOR, BOOL, etc.)
     #[serde(rename = "type")]
     pub option_type: String,
-    /// Data with default
+    /// Data containing default value
     pub data:        SchemaData
 }
 
-/// Root schema structure
+/// Root schema structure.
+///
+/// Top-level container for all schema options, matching the
+/// Hyprland schema JSON format.
 #[derive(Debug, Deserialize)]
 pub struct Schema {
-    /// List of schema options
+    /// List of all schema options
     pub hyprlang_schema: Vec<SchemaOption>
 }
 

@@ -1,3 +1,11 @@
+//! Source directive parsing for configuration file includes.
+//!
+//! This module handles the recursive parsing of `source = path` directives
+//! in Hyprland configuration files. Features include:
+//! - Glob pattern support for source paths
+//! - Cycle detection to prevent infinite loops
+//! - Recursive directory traversal
+
 use std::{
     collections::HashSet,
     fs,
@@ -8,7 +16,23 @@ use hyprlang::Config;
 
 use crate::{error::AppError, path::resolve_glob};
 
-/// Recursively parse source directives from config files
+/// Recursively parse source directives from configuration files.
+///
+/// Scans the configuration file for `source = path` directives and
+/// parses referenced files into the configuration. Supports glob patterns
+/// and prevents infinite loops through cycle detection.
+///
+/// # Arguments
+///
+/// * `config` - Configuration instance to populate
+/// * `config_path` - Path to the current configuration file
+/// * `base_dir` - Base directory for resolving relative paths
+/// * `visited` - Set of already-visited paths for cycle detection
+/// * `debug` - Enable debug output to stderr
+///
+/// # Errors
+///
+/// Returns an error if a source file cannot be read or path resolution fails.
 pub fn parse_sources_recursive(
     config: &mut Config,
     config_path: &Path,
