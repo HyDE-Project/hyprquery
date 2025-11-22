@@ -1,8 +1,0 @@
-CompileFlags:
-  Add:
-    - "-Ibuild/_deps/nlohmann_json-src/include"
-    - "-Ibuild/_deps/nlohmann_json-src/single_include"
-    - "-std=c++23"
-
-Index:
-  Background: Build
