@@ -147,9 +147,9 @@ pub fn run() -> Result<i32, AppError> {
         )?;
 
         results.push(QueryResult {
-            key:        query.query.clone(),
-            value:      final_value,
-            value_type: final_type.to_string()
+            key:        query.query.clone().into_boxed_str(),
+            value:      final_value.into_boxed_str(),
+            value_type: final_type
         });
     }
 
@@ -209,12 +209,12 @@ fn handle_get_defaults(args: &Args) -> Result<i32, AppError> {
 }
 
 /// Apply type and regex filters to a value
-fn apply_filters<'a>(
+fn apply_filters(
     value: String,
-    type_str: &'a str,
+    type_str: &'static str,
     expected_type: &Option<String>,
     expected_regex: &Option<String>
-) -> Result<(String, &'a str), AppError> {
+) -> Result<(String, &'static str), AppError> {
     if let Some(exp_type) = expected_type
         && normalize_type(type_str) != normalize_type(exp_type)
     {

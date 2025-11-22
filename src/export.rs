@@ -12,8 +12,8 @@ pub fn export_json(results: &[QueryResult]) {
         .iter()
         .map(|r| {
             json!({
-                "key": r.key,
-                "value": if r.value_type == "NULL" { Value::Null } else { Value::String(r.value.clone()) },
+                "key": &*r.key,
+                "value": if r.value_type == "NULL" { Value::Null } else { Value::String(r.value.to_string()) },
                 "type": r.value_type
             })
         })
@@ -41,10 +41,8 @@ pub fn export_json(results: &[QueryResult]) {
 pub fn export_env(results: &[QueryResult], queries: &[QueryInput]) {
     for (i, result) in results.iter().enumerate() {
         let var_name = if i < queries.len() {
-            let mut name = queries[i].query.clone();
-            if name.starts_with('$') {
-                name = name[1..].to_string();
-            }
+            let name = &queries[i].query;
+            let name = name.strip_prefix('$').unwrap_or(name);
             name.replace(':', "_").to_uppercase()
         } else {
             result.key.replace(':', "_").to_uppercase()
@@ -69,7 +67,7 @@ pub fn export_plain(results: &[QueryResult], delimiter: &str) {
             if r.value_type == "NULL" {
                 ""
             } else {
-                r.value.as_str()
+                &*r.value
             }
         })
         .collect();

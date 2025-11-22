@@ -7,13 +7,13 @@ use clap::Parser;
 #[command(version)]
 #[command(about = "A configuration parser for hypr* config files")]
 pub struct Args {
-    /// Query to execute (format: query[expectedType][expectedRegex])
-    #[arg(short = 'Q', long = "query", required = true, num_args = 1..)]
-    pub queries: Vec<String>,
-
     /// Configuration file path
     #[arg(required = true)]
     pub config_file: String,
+
+    /// Query to execute (format: query[expectedType][expectedRegex])
+    #[arg(short = 'Q', long = "query", required = true, num_args = 1..)]
+    pub queries: Vec<String>,
 
     /// Schema file path
     #[arg(long)]

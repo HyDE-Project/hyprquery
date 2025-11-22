@@ -15,11 +15,11 @@ pub struct QueryInput {
 #[derive(Debug, Clone)]
 pub struct QueryResult {
     /// The original query key
-    pub key:        String,
+    pub key:        Box<str>,
     /// The resolved value as string
-    pub value:      String,
+    pub value:      Box<str>,
     /// The type of the value
-    pub value_type: String
+    pub value_type: &'static str
 }
 
 /// Parse raw query strings into QueryInput structs
