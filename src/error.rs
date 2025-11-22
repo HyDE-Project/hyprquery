@@ -151,7 +151,8 @@ mod tests {
 
     #[test]
     fn test_from_regex_error() {
-        let regex_err = regex::Regex::new(r"[invalid").unwrap_err();
+        let pattern = String::from("[");
+        let regex_err = regex::Regex::new(&pattern).unwrap_err();
         let app_err = from_regex(regex_err);
         assert!(!app_err.to_string().is_empty());
     }

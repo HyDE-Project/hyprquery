@@ -11,7 +11,10 @@ categories = ["command-line-utilities", "config"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-hyprlang = { git = "https://github.com/spinualexandru/hyprlang-rs", features = ["hyprland", "mutation"] }
+hyprlang = { git = "https://github.com/spinualexandru/hyprlang-rs", features = [
+  "hyprland",
+  "mutation",
+] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 masterror = "0.25"
@@ -19,7 +22,7 @@ regex = "1"
 glob = "0.3"
 shellexpand = "3"
 dirs = "6"
-ureq = "2"
+ureq = "3"
 
 [profile.release]
 lto = true
