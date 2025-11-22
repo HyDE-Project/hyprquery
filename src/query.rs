@@ -107,3 +107,69 @@ pub fn parse_query_inputs(raw_queries: &[String]) -> Vec<QueryInput> {
 pub fn normalize_type(type_str: &str) -> String {
     type_str.to_uppercase()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_simple_query() {
+        let queries = parse_query_inputs(&["general:border_size".to_string()]);
+        assert_eq!(queries.len(), 1);
+        assert_eq!(queries[0].query, "general:border_size");
+        assert!(queries[0].expected_type.is_none());
+        assert!(queries[0].expected_regex.is_none());
+        assert!(!queries[0].is_dynamic_variable);
+    }
+
+    #[test]
+    fn test_parse_query_with_type() {
+        let queries = parse_query_inputs(&["general:border_size[INT]".to_string()]);
+        assert_eq!(queries[0].query, "general:border_size");
+        assert_eq!(queries[0].expected_type.as_deref(), Some("INT"));
+        assert!(queries[0].expected_regex.is_none());
+    }
+
+    #[test]
+    fn test_parse_query_with_type_and_regex() {
+        let queries = parse_query_inputs(&["general:border_size[INT][^\\d+$]".to_string()]);
+        assert_eq!(queries[0].query, "general:border_size");
+        assert_eq!(queries[0].expected_type.as_deref(), Some("INT"));
+        assert_eq!(queries[0].expected_regex.as_deref(), Some("^\\d+$"));
+    }
+
+    #[test]
+    fn test_parse_dynamic_variable() {
+        let queries = parse_query_inputs(&["$terminal".to_string()]);
+        assert!(queries[0].is_dynamic_variable);
+        assert_eq!(queries[0].query, "$terminal");
+    }
+
+    #[test]
+    fn test_parse_empty_type_bracket() {
+        let queries = parse_query_inputs(&["key[][regex]".to_string()]);
+        assert_eq!(queries[0].query, "key");
+        assert!(queries[0].expected_type.is_none());
+        assert_eq!(queries[0].expected_regex.as_deref(), Some("regex"));
+    }
+
+    #[test]
+    fn test_parse_multiple_queries() {
+        let queries = parse_query_inputs(&[
+            "key1".to_string(),
+            "key2[STRING]".to_string(),
+            "$var".to_string()
+        ]);
+        assert_eq!(queries.len(), 3);
+        assert_eq!(queries[0].query, "key1");
+        assert_eq!(queries[1].expected_type.as_deref(), Some("STRING"));
+        assert!(queries[2].is_dynamic_variable);
+    }
+
+    #[test]
+    fn test_normalize_type() {
+        assert_eq!(normalize_type("int"), "INT");
+        assert_eq!(normalize_type("STRING"), "STRING");
+        assert_eq!(normalize_type("Float"), "FLOAT");
+    }
+}

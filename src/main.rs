@@ -5,7 +5,7 @@ mod query;
 mod schema;
 
 use std::{
-    collections::hash_map::DefaultHasher,
+    collections::{HashSet, hash_map::DefaultHasher},
     fs,
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
@@ -15,7 +15,7 @@ use std::{
 use clap::Parser;
 use error::AppError;
 use export::{export_env, export_json, export_plain};
-use hyprlang::{Config, ConfigValue};
+use hyprlang::{Config, ConfigOptions};
 use path::{normalize_path, resolve_glob};
 use query::{QueryResult, normalize_type, parse_query_inputs};
 use regex::Regex;
@@ -39,7 +39,7 @@ struct Args {
     #[arg(long)]
     schema: Option<String>,
 
-    /// Allow missing values
+    /// Allow missing values (don't fail with exit code 1)
     #[arg(long)]
     allow_missing: bool,
 
@@ -68,38 +68,42 @@ struct Args {
     delimiter: String
 }
 
+/// Hash a string to create unique dynamic variable keys
 fn hash_string(s: &str) -> u64 {
     let mut hasher = DefaultHasher::new();
     s.hash(&mut hasher);
     hasher.finish()
 }
 
-fn config_value_to_string(value: &ConfigValue) -> String {
+/// Convert ConfigValue to string representation
+fn config_value_to_string(value: &hyprlang::ConfigValue) -> String {
     match value {
-        ConfigValue::Int(i) => i.to_string(),
-        ConfigValue::Float(f) => f.to_string(),
-        ConfigValue::String(s) => s.clone(),
-        ConfigValue::Vec2(v) => format!("{}, {}", v.x, v.y),
-        ConfigValue::Color(c) => format!("rgba({}, {}, {}, {})", c.r, c.g, c.b, c.a),
-        ConfigValue::Custom {
+        hyprlang::ConfigValue::Int(i) => i.to_string(),
+        hyprlang::ConfigValue::Float(f) => f.to_string(),
+        hyprlang::ConfigValue::String(s) => s.clone(),
+        hyprlang::ConfigValue::Vec2(v) => format!("{}, {}", v.x, v.y),
+        hyprlang::ConfigValue::Color(c) => format!("rgba({}, {}, {}, {})", c.r, c.g, c.b, c.a),
+        hyprlang::ConfigValue::Custom {
             ..
         } => "custom".to_string()
     }
 }
 
-fn config_value_type_name(value: &ConfigValue) -> &'static str {
+/// Get type name for ConfigValue
+fn config_value_type_name(value: &hyprlang::ConfigValue) -> &'static str {
     match value {
-        ConfigValue::Int(_) => "INT",
-        ConfigValue::Float(_) => "FLOAT",
-        ConfigValue::String(_) => "STRING",
-        ConfigValue::Vec2(_) => "VEC2",
-        ConfigValue::Color(_) => "COLOR",
-        ConfigValue::Custom {
+        hyprlang::ConfigValue::Int(_) => "INT",
+        hyprlang::ConfigValue::Float(_) => "FLOAT",
+        hyprlang::ConfigValue::String(_) => "STRING",
+        hyprlang::ConfigValue::Vec2(_) => "VEC2",
+        hyprlang::ConfigValue::Color(_) => "COLOR",
+        hyprlang::ConfigValue::Custom {
             ..
         } => "CUSTOM"
     }
 }
 
+/// Main application logic
 fn run() -> Result<i32, AppError> {
     let args = Args::parse();
 
@@ -110,16 +114,24 @@ fn run() -> Result<i32, AppError> {
         ));
     }
 
-    let config_dir = config_path
-        .parent()
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| PathBuf::from("."));
+    let config_dir = match config_path.parent() {
+        Some(p) => p.to_path_buf(),
+        None => PathBuf::from(".")
+    };
+
+    if args.get_defaults {
+        return handle_get_defaults(&args);
+    }
 
     let queries = parse_query_inputs(&args.queries);
-
     let has_dynamic = queries.iter().any(|q| q.is_dynamic_variable);
 
-    let mut config = Config::new();
+    let mut options = ConfigOptions::default();
+    if args.source {
+        options.base_dir = Some(config_dir.clone());
+    }
+
+    let mut config = Config::with_options(options);
 
     if has_dynamic {
         let mut content = fs::read_to_string(&config_path)?;
@@ -168,12 +180,15 @@ fn run() -> Result<i32, AppError> {
     }
 
     if args.source {
-        let sources = find_sources(&config_path, &config_dir)?;
-        for source_path in sources {
-            if source_path.exists() && source_path.is_file() {
-                let _ = config.parse_file(&source_path);
-            }
-        }
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
+        parse_sources_recursive(
+            &mut config,
+            &config_path,
+            &config_dir,
+            &mut visited,
+            args.debug
+        )?;
     }
 
     let mut results = Vec::with_capacity(queries.len());
@@ -234,9 +249,54 @@ fn run() -> Result<i32, AppError> {
         _ => export_plain(&results, &args.delimiter)
     }
 
-    if null_count > 0 { Ok(1) } else { Ok(0) }
+    if null_count > 0 && !args.allow_missing {
+        Ok(1)
+    } else {
+        Ok(0)
+    }
 }
 
+/// Handle --get-defaults flag to output all schema keys
+fn handle_get_defaults(args: &Args) -> Result<i32, AppError> {
+    let schema_path = match &args.schema {
+        Some(path) => normalize_path(path)?,
+        None => {
+            return Err(AppError::schema_not_found(
+                "Schema file required for --get-defaults"
+            ));
+        }
+    };
+
+    if !schema_path.exists() {
+        return Err(AppError::schema_not_found(
+            &schema_path.display().to_string()
+        ));
+    }
+
+    let keys = schema::get_schema_keys(&schema_path)?;
+
+    match args.export.as_deref() {
+        Some("json") => {
+            let json_keys: Vec<serde_json::Value> = keys
+                .iter()
+                .map(|k| serde_json::Value::String(k.clone()))
+                .collect();
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&json_keys).unwrap_or_default()
+            );
+        }
+        _ => {
+            for key in keys {
+                println!("{}", key);
+            }
+        }
+    }
+
+    Ok(0)
+}
+
+/// Apply type and regex filters to a value
 fn apply_filters<'a>(
     value: String,
     type_str: &'a str,
@@ -259,22 +319,65 @@ fn apply_filters<'a>(
     Ok((value, type_str))
 }
 
-fn find_sources(config_path: &Path, base_dir: &Path) -> Result<Vec<PathBuf>, AppError> {
+/// Recursively parse source directives from config files
+fn parse_sources_recursive(
+    config: &mut Config,
+    config_path: &Path,
+    base_dir: &Path,
+    visited: &mut HashSet<PathBuf>,
+    debug: bool
+) -> Result<(), AppError> {
     let content = fs::read_to_string(config_path)?;
-    let mut sources = Vec::new();
 
     for line in content.lines() {
         let trimmed = line.trim();
-        if trimmed.starts_with("source")
-            && let Some(eq_pos) = trimmed.find('=')
-        {
-            let path_part = trimmed[eq_pos + 1..].trim();
-            let paths = resolve_glob(path_part, base_dir)?;
-            sources.extend(paths);
+
+        if !trimmed.starts_with("source") {
+            continue;
+        }
+
+        let Some(eq_pos) = trimmed.find('=') else {
+            continue;
+        };
+
+        let path_part = trimmed[eq_pos + 1..].trim();
+        let paths = resolve_glob(path_part, base_dir)?;
+
+        for source_path in paths {
+            if !source_path.exists() || !source_path.is_file() {
+                continue;
+            }
+
+            let canonical = match source_path.canonicalize() {
+                Ok(p) => p,
+                Err(_) => source_path.clone()
+            };
+
+            if visited.contains(&canonical) {
+                if debug {
+                    eprintln!("[debug] Skipping already visited: {}", canonical.display());
+                }
+                continue;
+            }
+
+            visited.insert(canonical.clone());
+
+            if debug {
+                eprintln!("[debug] Parsing source: {}", source_path.display());
+            }
+
+            let _ = config.parse_file(&source_path);
+
+            let source_dir = match source_path.parent() {
+                Some(p) => p.to_path_buf(),
+                None => base_dir.to_path_buf()
+            };
+
+            parse_sources_recursive(config, &source_path, &source_dir, visited, debug)?;
         }
     }
 
-    Ok(sources)
+    Ok(())
 }
 
 fn main() {

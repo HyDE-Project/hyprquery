@@ -108,3 +108,74 @@ impl From<regex::Error> for AppError {
         Self::invalid_query(&err.to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_config_not_found() {
+        let err = AppError::config_not_found("/test/path");
+        let msg = err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_schema_not_found() {
+        let err = AppError::schema_not_found("/schema/path");
+        let msg = err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_config_parse() {
+        let err = AppError::config_parse("syntax error");
+        let msg = err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_invalid_query() {
+        let err = AppError::invalid_query("bad format");
+        let msg = err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_io_error() {
+        let err = AppError::io("read failed");
+        let msg = err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_path_resolution() {
+        let err = AppError::path_resolution("invalid path");
+        let msg = err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_from_io_error() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
+        let app_err: AppError = io_err.into();
+        let msg = app_err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_from_glob_error() {
+        let glob_err = glob::Pattern::new("[").unwrap_err();
+        let app_err: AppError = glob_err.into();
+        let msg = app_err.to_string();
+        assert!(!msg.is_empty());
+    }
+
+    #[test]
+    fn test_from_regex_error() {
+        let regex_err = regex::Regex::new("[").unwrap_err();
+        let app_err: AppError = regex_err.into();
+        let msg = app_err.to_string();
+        assert!(!msg.is_empty());
+    }
+}

@@ -92,3 +92,169 @@ pub fn load_schema(config: &mut Config, schema_path: &Path) -> Result<(), AppErr
 
     Ok(())
 }
+
+/// Get all schema keys from JSON file
+///
+/// # Arguments
+///
+/// * `schema_path` - Path to the schema JSON file
+///
+/// # Returns
+///
+/// Vector of all configuration keys in the schema
+///
+/// # Errors
+///
+/// Returns error if file cannot be read or parsed
+pub fn get_schema_keys(schema_path: &Path) -> Result<Vec<String>, AppError> {
+    let file = File::open(schema_path)
+        .map_err(|_| AppError::schema_not_found(&schema_path.display().to_string()))?;
+
+    let reader = BufReader::new(file);
+    let schema: Schema = serde_json::from_reader(reader)?;
+
+    let keys = schema
+        .hyprlang_schema
+        .into_iter()
+        .map(|option| option.value)
+        .collect();
+
+    Ok(keys)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{fs, io::Write};
+
+    use super::*;
+
+    fn create_test_schema() -> (std::path::PathBuf, String) {
+        let temp_dir = std::env::temp_dir();
+        let schema_path = temp_dir.join("test_schema.json");
+        let schema_content = r#"{
+            "hyprlang_schema": [
+                {
+                    "value": "general:border_size",
+                    "type": "INT",
+                    "data": { "default": 2 }
+                },
+                {
+                    "value": "decoration:rounding",
+                    "type": "FLOAT",
+                    "data": { "default": 8.0 }
+                },
+                {
+                    "value": "general:layout",
+                    "type": "STRING_SHORT",
+                    "data": { "default": "dwindle" }
+                }
+            ]
+        }"#;
+        (schema_path, schema_content.to_string())
+    }
+
+    #[test]
+    fn test_load_schema() {
+        let (schema_path, content) = create_test_schema();
+        let mut file = fs::File::create(&schema_path).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+
+        let mut config = Config::default();
+        let result = load_schema(&mut config, &schema_path);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(schema_path);
+    }
+
+    #[test]
+    fn test_get_schema_keys() {
+        let temp_dir = std::env::temp_dir();
+        let schema_path = temp_dir.join("test_get_keys_schema.json");
+        let schema_content = r#"{
+            "hyprlang_schema": [
+                {
+                    "value": "general:border_size",
+                    "type": "INT",
+                    "data": { "default": 2 }
+                },
+                {
+                    "value": "decoration:rounding",
+                    "type": "FLOAT",
+                    "data": { "default": 8.0 }
+                },
+                {
+                    "value": "general:layout",
+                    "type": "STRING_SHORT",
+                    "data": { "default": "dwindle" }
+                }
+            ]
+        }"#;
+
+        let mut file = fs::File::create(&schema_path).unwrap();
+        file.write_all(schema_content.as_bytes()).unwrap();
+
+        let result = get_schema_keys(&schema_path);
+        assert!(result.is_ok());
+        let keys = result.unwrap();
+        assert_eq!(keys.len(), 3);
+        assert!(keys.contains(&"general:border_size".to_string()));
+        assert!(keys.contains(&"decoration:rounding".to_string()));
+        assert!(keys.contains(&"general:layout".to_string()));
+
+        let _ = fs::remove_file(schema_path);
+    }
+
+    #[test]
+    fn test_schema_not_found() {
+        let result = get_schema_keys(Path::new("/nonexistent/schema.json"));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_schema_parse_vector() {
+        let temp_dir = std::env::temp_dir();
+        let schema_path = temp_dir.join("test_vector_schema.json");
+        let schema_content = r#"{
+            "hyprlang_schema": [
+                {
+                    "value": "general:gaps",
+                    "type": "VECTOR",
+                    "data": { "default": [5.0, 10.0] }
+                }
+            ]
+        }"#;
+
+        let mut file = fs::File::create(&schema_path).unwrap();
+        file.write_all(schema_content.as_bytes()).unwrap();
+
+        let mut config = Config::default();
+        let result = load_schema(&mut config, &schema_path);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(schema_path);
+    }
+
+    #[test]
+    fn test_schema_parse_bool() {
+        let temp_dir = std::env::temp_dir();
+        let schema_path = temp_dir.join("test_bool_schema.json");
+        let schema_content = r#"{
+            "hyprlang_schema": [
+                {
+                    "value": "decoration:blur:enabled",
+                    "type": "BOOL",
+                    "data": { "default": true }
+                }
+            ]
+        }"#;
+
+        let mut file = fs::File::create(&schema_path).unwrap();
+        file.write_all(schema_content.as_bytes()).unwrap();
+
+        let mut config = Config::default();
+        let result = load_schema(&mut config, &schema_path);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(schema_path);
+    }
+}
