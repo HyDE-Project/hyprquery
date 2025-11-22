@@ -1,4 +1,4 @@
-//! Query parsing and result types for hyprquery.
+//! Query parsing and result types for hydequery.
 //!
 //! This module handles the parsing of query strings in the format:
 //! `key[expectedType][expectedRegex]`
@@ -53,7 +53,7 @@ pub struct QueryResult {
 /// # Examples
 ///
 /// ```
-/// use hyprquery::query::parse_query_inputs;
+/// use hydequery::query::parse_query_inputs;
 ///
 /// let queries = parse_query_inputs(&["general:border_size".to_string()]);
 /// assert_eq!(queries[0].query, "general:border_size");

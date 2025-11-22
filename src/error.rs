@@ -1,4 +1,4 @@
-//! Error types and handling for hyprquery.
+//! Error types and handling for hydequery.
 //!
 //! This module provides error handling using the `masterror` crate's
 //! builder pattern API. All errors are categorized by kind and include

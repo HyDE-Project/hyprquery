@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn test_parse_sources_no_source_directive() {
-        let temp_dir = std::env::temp_dir().join("hyprquery_source_test");
+        let temp_dir = std::env::temp_dir().join("hydequery_source_test");
         let _ = fs::create_dir_all(&temp_dir);
         let config_path = temp_dir.join("test.conf");
         let mut file = fs::File::create(&config_path).unwrap();
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn test_parse_sources_cycle_detection() {
-        let temp_dir = std::env::temp_dir().join("hyprquery_cycle_test");
+        let temp_dir = std::env::temp_dir().join("hydequery_cycle_test");
         let _ = fs::create_dir_all(&temp_dir);
         let config_path = temp_dir.join("cycle.conf");
         let mut file = fs::File::create(&config_path).unwrap();

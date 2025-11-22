@@ -1,4 +1,4 @@
-//! Core application logic for hyprquery.
+//! Core application logic for hydequery.
 //!
 //! This module contains the main execution flow, including:
 //! - Configuration file parsing and validation

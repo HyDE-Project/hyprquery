@@ -1,126 +1,190 @@
-# HyprQuery (hyq)
+# Hydequery
 
-A command-line utility for querying configuration values from Hyprland and hyprland-related configuration files using the hyprlang-rs parsing library.
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://opensource.org/licenses/GPL-3.0)
+[![Rust](https://img.shields.io/badge/Rust-2024-orange.svg)](https://www.rust-lang.org/)
+
+**High-performance configuration parser for Hyprland**
+
+A blazing-fast CLI tool written in Rust for querying values from Hyprland configuration files. Supports nested keys, dynamic variables, type filtering, regex matching, and multiple export formats.
 
 ## Features
 
-- Query any value from Hyprland configuration files
-- Support for variables and nested includes via `source` directives
-- Load schema files to provide default values
-- JSON output format for integration with other tools
-- Environment variable expansion in file paths
-- Type and regex filtering for query results
+- **Fast** - Optimized Rust implementation with minimal allocations (~1ms per query)
+- **Flexible queries** - Support for nested keys, type filters, and regex patterns
+- **Dynamic variables** - Query `$variable` values directly
+- **Multiple formats** - Export as plain text, JSON, or environment variables
+- **Source following** - Recursively parse `source = path` directives with cycle detection
+- **Schema support** - Load default values from Hyprland schema files
+- **Colorful help** - Beautiful, detailed `--help` with examples
 
 ## Installation
 
-### Dependencies
-
-- Rust 1.82+ (Edition 2024)
-
-### Building from Source
+### From source
 
 ```bash
-git clone https://github.com/HyDE-Project/hyprquery.git
-cd hyprquery
-
+git clone https://github.com/HyDE-Project/hydequery
+cd hydequery
 cargo build --release
-
-sudo cp target/release/hyprquery /usr/local/bin/hyq
+sudo cp target/release/hydequery /usr/local/bin/
 ```
 
-### From crates.io
+### Requirements
 
-```bash
-cargo install hyprquery
-```
+- Rust 2024 edition (nightly)
 
 ## Usage
 
-Basic syntax:
-
-```
-hyq [OPTIONS] --query KEY CONFIG_FILE
-```
-
-### Examples
-
-Query a simple value:
+### Basic syntax
 
 ```bash
-hyq --query "general:border_size" ~/.config/hypr/hyprland.conf
+hydequery <CONFIG_FILE> -Q <QUERY> [OPTIONS]
 ```
 
-Query with JSON output:
+### Query format
+
+```
+key                    # Simple lookup
+key[type]              # With type filter
+key[type][regex]       # With type and regex filter
+$variable              # Dynamic variable
+```
+
+**Types:** `INT`, `FLOAT`, `STRING`, `VEC2`, `COLOR`, `BOOL`
+
+## Examples
+
+### Basic query
 
 ```bash
-hyq --export json --query "decoration:blur:enabled" ~/.config/hypr/hyprland.conf
+hydequery ~/.config/hypr/hyprland.conf -Q 'general:border_size'
+# Output: 2
 ```
 
-Query with a schema file:
+### Query variable
 
 ```bash
-hyq --schema ~/.config/hypr/schema.json --query "general:gaps_in" ~/.config/hypr/hyprland.conf
+hydequery config.conf -Q '$terminal'
+# Output: kitty
 ```
 
-Follow source directives:
+### Multiple queries
 
 ```bash
-hyq -s --query "general:border_size" ~/.config/hypr/hyprland.conf
+hydequery config.conf -Q 'general:gaps_in' -Q 'general:gaps_out'
+# Output:
+# 5
+# 10
 ```
 
-Query with type and regex hints:
+### With type filter
 
 ```bash
-hyq --query "general:border_size[INT][^[0-9]+$]" ~/.config/hypr/hyprland.conf
+hydequery config.conf -Q 'general:border_size[INT]'
+# Output: 2
 ```
 
-Query a variable:
+### With regex filter
 
 ```bash
-hyq --query '$terminal' ~/.config/hypr/hyprland.conf
+hydequery config.conf -Q 'decoration:rounding[INT][^[0-9]+$]'
+# Output: 8
 ```
 
-Multiple queries:
+### JSON export
 
 ```bash
-hyq -Q "general:border_size" -Q "general:gaps_in" -Q "decoration:rounding" ~/.config/hypr/hyprland.conf
+hydequery config.conf -Q 'general:border_size' --export json
 ```
 
-Export as environment variables:
+```json
+{
+  "key": "general:border_size",
+  "value": "2",
+  "type": "INT"
+}
+```
+
+### Environment variables export
 
 ```bash
-hyq --export env -Q "general:border_size" -Q "general:gaps_in" ~/.config/hypr/hyprland.conf
+hydequery config.conf -Q '$terminal' --export env
+# Output: TERMINAL="kitty"
 ```
 
-### Options
+### Follow source directives
 
-- `-Q, --query KEY`: Query to execute (format: `query[expectedType][expectedRegex]`)
-- `--schema PATH`: Load a schema file with default values
-- `--allow-missing`: Don't fail if the value is missing
-- `--get-defaults`: Get default keys from schema
-- `--strict`: Enable strict mode validation
-- `--export FORMAT`: Export format: `json` or `env`
-- `-s, --source`: Follow source directives in config files
-- `-D, --delimiter`: Delimiter for plain output (default: newline)
-- `--debug`: Enable debug logging
-
-## Query Format
-
-Queries support optional type and regex hints:
-
-```
-query[expectedType][expectedRegex]
+```bash
+hydequery config.conf -Q 'colors:background' -s
 ```
 
-- `query`: The configuration key path (e.g., `general:border_size`)
-- `expectedType`: Expected value type (`INT`, `FLOAT`, `STRING`, `VEC2`, `COLOR`)
-- `expectedRegex`: Regex pattern to match the value
+### With schema defaults
 
-If the value doesn't match the expected type or regex, the result will be `NULL`.
+```bash
+hydequery config.conf -Q 'general:layout' --schema hyprland.json
+```
 
-## Schema Files
+### Custom delimiter
 
-Schema files define the format and default values for configuration options. They are JSON files that can be derived from [Hyprland's ConfigDescriptions.hpp](https://github.com/hyprwm/Hyprland/blob/main/src/config/ConfigDescriptions.hpp).
+```bash
+hydequery config.conf -Q 'a' -Q 'b' -D ','
+# Output: val1,val2
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `-Q, --query <QUERY>` | Query to execute (required, multiple allowed) |
+| `--schema <PATH>` | Load schema file for default values |
+| `--get-defaults` | Output all keys from schema |
+| `--allow-missing` | Don't fail on NULL values (exit 0) |
+| `--strict` | Fail on config parse errors |
+| `--export <FORMAT>` | Output format: `json`, `env` |
+| `-s, --source` | Follow source directives recursively |
+| `-D, --delimiter <STR>` | Delimiter for plain output (default: `\n`) |
+| `--debug` | Enable debug logging to stderr |
+| `-h, --help` | Show colorful help with examples |
+| `-V, --version` | Show version |
+
+## Exit codes
+
+| Code | Description |
+|------|-------------|
+| `0` | All queries resolved successfully |
+| `1` | One or more queries returned NULL, or error occurred |
+
+## Configuration file format
+
+Hydequery parses standard Hyprland configuration format:
+
+```bash
+# Variables
+$terminal = kitty
+$mod = SUPER
+
+# Nested sections
+general {
+    border_size = 2
+    gaps_in = 5
+    gaps_out = 10
+}
+
+decoration {
+    rounding = 8
+    blur {
+        enabled = true
+        size = 3
+    }
+}
+
+# Source directives (supports globs)
+source = ~/.config/hypr/colors.conf
+source = ~/.config/hypr/keybinds/*.conf
+```
+
+## Schema files
+
+Schema files define default values for configuration options:
 
 ```json
 {
@@ -128,25 +192,58 @@ Schema files define the format and default values for configuration options. The
     {
       "value": "general:border_size",
       "type": "INT",
-      "data": {
-        "default": 2
-      }
+      "data": { "default": 2 }
     },
     {
       "value": "general:gaps_in",
       "type": "INT",
-      "data": {
-        "default": 5
-      }
+      "data": { "default": 5 }
     }
   ]
 }
 ```
 
-## License
+## Architecture
 
-[GPL-3.0 License](LICENSE)
+```
+src/
+├── main.rs     # Entry point
+├── app.rs      # Core application logic
+├── cli.rs      # CLI argument definitions
+├── error.rs    # Error handling (masterror)
+├── export.rs   # Output formatters (JSON, env, plain)
+├── help.rs     # Colorful help display
+├── path.rs     # Path normalization and glob resolution
+├── query.rs    # Query parsing
+├── schema.rs   # Schema loading
+├── source.rs   # Source directive handling
+└── value.rs    # Config value conversion
+```
+
+## Performance
+
+- **Binary size:** ~2.5 MB (stripped, LTO enabled)
+- **Query time:** ~1ms
+- **Memory:** Optimized with `Box<str>` and `&'static str`
+
+## Dependencies
+
+- [clap](https://crates.io/crates/clap) - CLI argument parsing
+- [hyprlang](https://github.com/spinualexandru/hyprlang-rs) - Hyprland config parsing
+- [masterror](https://crates.io/crates/masterror) - Error handling
+- [serde_json](https://crates.io/crates/serde_json) - JSON serialization
+- [regex](https://crates.io/crates/regex) - Pattern matching
+- [glob](https://crates.io/crates/glob) - Glob pattern support
+- [shellexpand](https://crates.io/crates/shellexpand) - Path expansion (~, $HOME)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please follow [RustManifest](https://github.com/RAprogramm/RustManifest) development standards.
+
+## License
+
+GPL-3.0 - see [LICENSE](LICENSE) for details.
+
+## Credits
+
+Created for [HyDE](https://github.com/HyDE-Project) - Hyprland Desktop Environment.

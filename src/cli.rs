@@ -1,16 +1,16 @@
-//! Command-line interface definitions for hyprquery.
+//! Command-line interface definitions for hydequery.
 //!
 //! This module defines the CLI argument structure using the `clap` derive API.
 //! All command-line options and flags are documented and validated by clap.
 
 use clap::Parser;
 
-/// Command-line arguments for hyprquery.
+/// Command-line arguments for hydequery.
 ///
 /// Defines all available options, flags, and positional arguments.
 /// Uses clap's derive API for automatic parsing and help generation.
 #[derive(Parser, Debug)]
-#[command(name = "hyprquery")]
+#[command(name = "hydequery")]
 #[command(version)]
 #[command(about = "A configuration parser for hypr* config files")]
 #[command(disable_help_flag = true)]

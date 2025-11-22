@@ -152,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_resolve_glob_with_files() {
-        let temp_dir = std::env::temp_dir().join("hyprquery_test");
+        let temp_dir = std::env::temp_dir().join("hydequery_test");
         let _ = fs::create_dir_all(&temp_dir);
         let test_file = temp_dir.join("test.conf");
         let _ = fs::write(&test_file, "test");

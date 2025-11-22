@@ -15,9 +15,9 @@
 //! ## Usage
 //!
 //! ```bash
-//! hyprquery /path/to/config.conf -Q 'general:border_size'
-//! hyprquery /path/to/config.conf -Q '$terminal' --export json
-//! hyprquery /path/to/config.conf -Q 'gaps[INT][^\d+$]' --strict
+//! hydequery /path/to/config.conf -Q 'general:border_size'
+//! hydequery /path/to/config.conf -Q '$terminal' --export json
+//! hydequery /path/to/config.conf -Q 'gaps[INT][^\d+$]' --strict
 //! ```
 
 mod app;

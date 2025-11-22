@@ -1,4 +1,4 @@
-//! Custom colorful help output for hyprquery.
+//! Custom colorful help output for hydequery.
 //!
 //! This module provides a beautifully formatted, colored help display
 //! with clear explanations, examples, and usage patterns.
@@ -56,8 +56,8 @@ fn print_header() {
 fn print_usage() {
     println!(
         "{YELLOW}{BOLD}USAGE:{RESET}
-    {GREEN}hyprquery{RESET} {CYAN}<CONFIG_FILE>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY>{RESET} [{DIM}OPTIONS{RESET}]
-    {GREEN}hyprquery{RESET} {CYAN}<CONFIG_FILE>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY1>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY2>{RESET} ...
+    {GREEN}hydequery{RESET} {CYAN}<CONFIG_FILE>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY>{RESET} [{DIM}OPTIONS{RESET}]
+    {GREEN}hydequery{RESET} {CYAN}<CONFIG_FILE>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY1>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY2>{RESET} ...
 "
     );
 }
@@ -118,28 +118,28 @@ fn print_examples() {
         "{YELLOW}{BOLD}EXAMPLES:{RESET}
 
     {WHITE}Basic query:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} ~/.config/hypr/hyprland.conf {MAGENTA}-Q{RESET} {CYAN}'general:border_size'{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} ~/.config/hypr/hyprland.conf {MAGENTA}-Q{RESET} {CYAN}'general:border_size'{RESET}
     {BLUE}2{RESET}
 
     {WHITE}Query variable:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'$terminal'{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'$terminal'{RESET}
     {BLUE}kitty{RESET}
 
     {WHITE}Multiple queries:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:gaps_in'{RESET} {MAGENTA}-Q{RESET} {CYAN}'general:gaps_out'{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:gaps_in'{RESET} {MAGENTA}-Q{RESET} {CYAN}'general:gaps_out'{RESET}
     {BLUE}5{RESET}
     {BLUE}10{RESET}
 
     {WHITE}With type filter:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:border_size[INT]'{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:border_size[INT]'{RESET}
     {BLUE}2{RESET}
 
     {WHITE}With regex filter:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'decoration:rounding[INT][^[0-9]+$]'{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'decoration:rounding[INT][^[0-9]+$]'{RESET}
     {BLUE}8{RESET}
 
     {WHITE}JSON export:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:border_size'{RESET} {MAGENTA}--export{RESET} {CYAN}json{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:border_size'{RESET} {MAGENTA}--export{RESET} {CYAN}json{RESET}
     {BLUE}{{
       \"key\": \"general:border_size\",
       \"value\": \"2\",
@@ -147,17 +147,17 @@ fn print_examples() {
     }}{RESET}
 
     {WHITE}Environment variables:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'$terminal'{RESET} {MAGENTA}--export{RESET} {CYAN}env{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'$terminal'{RESET} {MAGENTA}--export{RESET} {CYAN}env{RESET}
     {BLUE}TERMINAL=\"kitty\"{RESET}
 
     {WHITE}With schema defaults:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:layout'{RESET} {MAGENTA}--schema{RESET} {CYAN}hyprland.json{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:layout'{RESET} {MAGENTA}--schema{RESET} {CYAN}hyprland.json{RESET}
 
     {WHITE}Follow source directives:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'colors:background'{RESET} {MAGENTA}-s{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'colors:background'{RESET} {MAGENTA}-s{RESET}
 
     {WHITE}Custom delimiter:{RESET}
-    {DIM}${RESET} {GREEN}hyprquery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'a'{RESET} {MAGENTA}-Q{RESET} {CYAN}'b'{RESET} {MAGENTA}-D{RESET} {CYAN}','{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'a'{RESET} {MAGENTA}-Q{RESET} {CYAN}'b'{RESET} {MAGENTA}-D{RESET} {CYAN}','{RESET}
     {BLUE}val1,val2{RESET}
 "
     );
@@ -178,7 +178,7 @@ fn print_exit_codes() {
 fn print_footer() {
     println!(
         "{DIM}───────────────────────────────────────────────────────────────{RESET}
-{WHITE}Repository:{RESET}  {CYAN}https://github.com/HyDE-Project/hyprquery{RESET}
+{WHITE}Repository:{RESET}  {CYAN}https://github.com/HyDE-Project/hydequery{RESET}
 {WHITE}License:{RESET}     {CYAN}GPL-3.0{RESET}
 {DIM}───────────────────────────────────────────────────────────────{RESET}
 "
