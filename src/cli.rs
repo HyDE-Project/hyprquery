@@ -13,7 +13,11 @@ use clap::Parser;
 #[command(name = "hyprquery")]
 #[command(version)]
 #[command(about = "A configuration parser for hypr* config files")]
+#[command(disable_help_flag = true)]
 pub struct Args {
+    /// Show help information
+    #[arg(short = 'h', long = "help")]
+    pub help:        bool,
     /// Configuration file path
     #[arg(required = true)]
     pub config_file: String,

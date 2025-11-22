@@ -24,15 +24,23 @@ mod app;
 mod cli;
 mod error;
 mod export;
+mod help;
 mod path;
 mod query;
 mod schema;
 mod source;
 mod value;
 
-use std::process;
+use std::{env, process};
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    if args.iter().any(|a| a == "-h" || a == "--help") {
+        help::print_help();
+        process::exit(0);
+    }
+
     match app::run() {
         Ok(code) => process::exit(code),
         Err(e) => {
