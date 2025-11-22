@@ -106,12 +106,11 @@ pub fn has_cached_schema() -> bool {
 /// println!("Schema cached at: {}", path.display());
 /// ```
 pub fn fetch_schema() -> Result<PathBuf, AppError> {
-    let response = ureq::get(SCHEMA_URL)
+    let body = ureq::get(SCHEMA_URL)
         .call()
-        .map_err(|e| AppError::internal(format!("Failed to fetch schema: {e}")))?;
-
-    let body = response
-        .into_string()
+        .map_err(|e| AppError::internal(format!("Failed to fetch schema: {e}")))?
+        .body_mut()
+        .read_to_string()
         .map_err(|e| AppError::internal(format!("Failed to read schema response: {e}")))?;
 
     let cache_path = get_cached_schema_path()?;
