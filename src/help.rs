@@ -47,7 +47,7 @@ fn print_header() {
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝{RESET}
 
-{WHITE}{BOLD}Hyprquery{RESET} - {DIM}High-performance configuration parser for Hyprland{RESET}
+{WHITE}{BOLD}Hydequery{RESET} - {DIM}High-performance configuration parser for Hyprland{RESET}
 "#
     );
 }
