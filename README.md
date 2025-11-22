@@ -122,7 +122,20 @@ hydequery config.conf -Q '$terminal' --export env
 hydequery config.conf -Q 'colors:background' -s
 ```
 
-### With schema defaults
+### Fetch and cache schema
+
+```bash
+hydequery --fetch-schema
+# Output: Schema cached at: ~/.cache/hydequery/hyprland.json
+```
+
+### Use cached schema
+
+```bash
+hydequery config.conf -Q 'general:layout' --schema auto
+```
+
+### With custom schema
 
 ```bash
 hydequery config.conf -Q 'general:layout' --schema hyprland.json
@@ -140,7 +153,8 @@ hydequery config.conf -Q 'a' -Q 'b' -D ','
 | Option | Description |
 |--------|-------------|
 | `-Q, --query <QUERY>` | Query to execute (required, multiple allowed) |
-| `--schema <PATH>` | Load schema file for default values |
+| `--schema <PATH>` | Load schema file (use `auto` for cached) |
+| `--fetch-schema` | Download and cache latest schema |
 | `--get-defaults` | Output all keys from schema |
 | `--allow-missing` | Don't fail on NULL values (exit 0) |
 | `--strict` | Fail on config parse errors |
@@ -217,6 +231,7 @@ src/
 ├── cli.rs      # CLI argument definitions
 ├── error.rs    # Error handling (masterror)
 ├── export.rs   # Output formatters (JSON, env, plain)
+├── fetch.rs    # Schema fetching and caching
 ├── help.rs     # Colorful help display
 ├── path.rs     # Path normalization and glob resolution
 ├── query.rs    # Query parsing
@@ -240,6 +255,8 @@ src/
 - [regex](https://crates.io/crates/regex) - Pattern matching
 - [glob](https://crates.io/crates/glob) - Glob pattern support
 - [shellexpand](https://crates.io/crates/shellexpand) - Path expansion (~, $HOME)
+- [ureq](https://crates.io/crates/ureq) - HTTP client for schema fetching
+- [dirs](https://crates.io/crates/dirs) - Platform-specific directories
 
 ## Contributing
 

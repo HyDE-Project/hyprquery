@@ -24,6 +24,7 @@ mod app;
 mod cli;
 mod error;
 mod export;
+mod fetch;
 mod help;
 mod path;
 mod query;

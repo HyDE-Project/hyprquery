@@ -26,9 +26,13 @@ pub struct Args {
     #[arg(short = 'Q', long = "query", required = true, num_args = 1..)]
     pub queries: Vec<String>,
 
-    /// Schema file path
+    /// Schema file path (use "auto" for cached schema)
     #[arg(long)]
     pub schema: Option<String>,
+
+    /// Fetch latest schema from repository
+    #[arg(long)]
+    pub fetch_schema: bool,
 
     /// Allow missing values (don't fail with exit code 1)
     #[arg(long)]

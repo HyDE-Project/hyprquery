@@ -19,6 +19,7 @@ use crate::{
     cli::Args,
     error,
     export::{export_env, export_json, export_plain},
+    fetch,
     path::normalize_path,
     query::{QueryResult, normalize_type, parse_query_inputs},
     schema,
@@ -46,6 +47,12 @@ use crate::{
 /// - Invalid regex pattern in query
 pub fn run() -> Result<i32, AppError> {
     let args = Args::parse();
+
+    if args.fetch_schema {
+        let path = fetch::fetch_schema()?;
+        println!("Schema cached at: {}", path.display());
+        return Ok(0);
+    }
 
     let config_path = normalize_path(&args.config_file)?;
     if !config_path.exists() {
@@ -108,7 +115,11 @@ pub fn run() -> Result<i32, AppError> {
     }
 
     if let Some(ref schema_path_str) = args.schema {
-        let schema_path = normalize_path(schema_path_str)?;
+        let schema_path = if schema_path_str == "auto" {
+            fetch::resolve_schema_path(schema_path_str)?
+        } else {
+            normalize_path(schema_path_str)?
+        };
         if !schema_path.exists() {
             return Err(error::schema_not_found(&schema_path.display().to_string()));
         }
@@ -210,7 +221,13 @@ pub fn run() -> Result<i32, AppError> {
 /// Returns an error if schema file is not specified or cannot be read.
 fn handle_get_defaults(args: &Args) -> Result<i32, AppError> {
     let schema_path = match &args.schema {
-        Some(path) => normalize_path(path)?,
+        Some(path) => {
+            if path == "auto" {
+                fetch::resolve_schema_path(path)?
+            } else {
+                normalize_path(path)?
+            }
+        }
         None => {
             return Err(error::schema_not_found(
                 "Schema file required for --get-defaults"

@@ -109,8 +109,8 @@ mod tests {
 
     #[test]
     fn test_config_value_to_string_float() {
-        let value = hyprlang::ConfigValue::Float(3.14);
-        assert_eq!(config_value_to_string(&value), "3.14");
+        let value = hyprlang::ConfigValue::Float(2.5);
+        assert_eq!(config_value_to_string(&value), "2.5");
     }
 
     #[test]

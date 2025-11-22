@@ -79,7 +79,8 @@ fn print_options() {
     {GREEN}-Q, --query{RESET} {BLUE}<QUERY>{RESET}      Query to execute {DIM}(required, multiple allowed){RESET}
                             Format: {CYAN}key[type][regex]{RESET}
 
-    {GREEN}--schema{RESET} {BLUE}<PATH>{RESET}          Load schema file for default values
+    {GREEN}--schema{RESET} {BLUE}<PATH>{RESET}          Load schema file {DIM}(use \"{CYAN}auto{DIM}\" for cached){RESET}
+    {GREEN}--fetch-schema{RESET}          Download and cache latest schema
     {GREEN}--get-defaults{RESET}          Output all keys from schema
     {GREEN}--allow-missing{RESET}         Don't fail on NULL values {DIM}(exit 0){RESET}
     {GREEN}--strict{RESET}                Fail on config parse errors
@@ -150,7 +151,14 @@ fn print_examples() {
     {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'$terminal'{RESET} {MAGENTA}--export{RESET} {CYAN}env{RESET}
     {BLUE}TERMINAL=\"kitty\"{RESET}
 
-    {WHITE}With schema defaults:{RESET}
+    {WHITE}Fetch and cache schema:{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} {MAGENTA}--fetch-schema{RESET}
+    {BLUE}Schema cached at: ~/.cache/hydequery/hyprland.json{RESET}
+
+    {WHITE}Use cached schema:{RESET}
+    {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:layout'{RESET} {MAGENTA}--schema{RESET} {CYAN}auto{RESET}
+
+    {WHITE}With custom schema:{RESET}
     {DIM}${RESET} {GREEN}hydequery{RESET} config.conf {MAGENTA}-Q{RESET} {CYAN}'general:layout'{RESET} {MAGENTA}--schema{RESET} {CYAN}hyprland.json{RESET}
 
     {WHITE}Follow source directives:{RESET}
