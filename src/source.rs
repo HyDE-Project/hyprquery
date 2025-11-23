@@ -115,12 +115,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_sources_no_source_directive() {
-        let temp_dir = std::env::temp_dir().join("hydequery_source_test");
+    fn test_parse_sources_theme_conf_style() {
+        let temp_dir = std::env::temp_dir().join("hydequery_theme_test");
         let _ = fs::create_dir_all(&temp_dir);
-        let config_path = temp_dir.join("test.conf");
+        let config_path = temp_dir.join("theme.conf");
         let mut file = fs::File::create(&config_path).unwrap();
-        writeln!(file, "key = value").unwrap();
+        writeln!(file, "$GTK_THEME = Gruvbox-Retro").unwrap();
+        writeln!(file, "$ICON_THEME = Gruvbox-Plus-Dark").unwrap();
+        writeln!(file, "$CURSOR_SIZE = 20").unwrap();
 
         let mut config = Config::default();
         let mut visited = HashSet::new();
@@ -130,6 +132,37 @@ mod tests {
             parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);
         assert!(result.is_ok());
 
+        let _ = fs::remove_file(config_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_parse_sources_with_inline_comments() {
+        let temp_dir = std::env::temp_dir().join("hydequery_comment_test");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let theme_path = temp_dir.join("theme.conf");
+        let mut theme_file = fs::File::create(&theme_path).unwrap();
+        writeln!(theme_file, "$GTK_THEME = Gruvbox-Retro").unwrap();
+
+        let config_path = temp_dir.join("hyprland.conf");
+        let mut file = fs::File::create(&config_path).unwrap();
+        writeln!(
+            file,
+            "source = {} # theme specific settings",
+            theme_path.display()
+        )
+        .unwrap();
+
+        let mut config = Config::default();
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
+
+        let result =
+            parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(theme_path);
         let _ = fs::remove_file(config_path);
         let _ = fs::remove_dir(temp_dir);
     }
@@ -146,6 +179,152 @@ mod tests {
         let mut visited = HashSet::new();
         let canonical = config_path.canonicalize().unwrap_or(config_path.clone());
         visited.insert(canonical);
+
+        let result =
+            parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(config_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_parse_sources_recursive_chain() {
+        let temp_dir = std::env::temp_dir().join("hydequery_chain_test");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let theme_path = temp_dir.join("theme.conf");
+        let mut theme_file = fs::File::create(&theme_path).unwrap();
+        writeln!(theme_file, "$GTK_THEME = Gruvbox-Retro").unwrap();
+        writeln!(theme_file, "general {{").unwrap();
+        writeln!(theme_file, "    border_size = 2").unwrap();
+        writeln!(theme_file, "}}").unwrap();
+
+        let dynamic_path = temp_dir.join("dynamic.conf");
+        let mut dynamic_file = fs::File::create(&dynamic_path).unwrap();
+        writeln!(dynamic_file, "source = {}", theme_path.display()).unwrap();
+
+        let config_path = temp_dir.join("hyprland.conf");
+        let mut file = fs::File::create(&config_path).unwrap();
+        writeln!(file, "source = {}", dynamic_path.display()).unwrap();
+
+        let mut config = Config::default();
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
+
+        let result =
+            parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(theme_path);
+        let _ = fs::remove_file(dynamic_path);
+        let _ = fs::remove_file(config_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_parse_sources_nonexistent_file() {
+        let temp_dir = std::env::temp_dir().join("hydequery_nonexistent_test");
+        let _ = fs::create_dir_all(&temp_dir);
+        let config_path = temp_dir.join("main.conf");
+        let mut file = fs::File::create(&config_path).unwrap();
+        writeln!(file, "source = /nonexistent/path/theme.conf").unwrap();
+
+        let mut config = Config::default();
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
+
+        let result =
+            parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(config_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_parse_sources_empty_source_after_comment_strip() {
+        let temp_dir = std::env::temp_dir().join("hydequery_empty_source_test");
+        let _ = fs::create_dir_all(&temp_dir);
+        let config_path = temp_dir.join("test.conf");
+        let mut file = fs::File::create(&config_path).unwrap();
+        writeln!(file, "source = # only comment").unwrap();
+
+        let mut config = Config::default();
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
+
+        let result =
+            parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(config_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_parse_sources_relative_path() {
+        let temp_dir = std::env::temp_dir().join("hydequery_relative_test");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let theme_path = temp_dir.join("theme.conf");
+        let mut theme_file = fs::File::create(&theme_path).unwrap();
+        writeln!(theme_file, "$CURSOR_THEME = Bibata-Modern-Ice").unwrap();
+
+        let config_path = temp_dir.join("hyprland.conf");
+        let mut file = fs::File::create(&config_path).unwrap();
+        writeln!(file, "source = ./theme.conf").unwrap();
+
+        let mut config = Config::default();
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
+
+        let result =
+            parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(theme_path);
+        let _ = fs::remove_file(config_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_parse_sources_debug_output() {
+        let temp_dir = std::env::temp_dir().join("hydequery_debug_test");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let theme_path = temp_dir.join("theme.conf");
+        let mut theme_file = fs::File::create(&theme_path).unwrap();
+        writeln!(theme_file, "$COLOR_SCHEME = prefer-dark").unwrap();
+
+        let config_path = temp_dir.join("main.conf");
+        let mut file = fs::File::create(&config_path).unwrap();
+        writeln!(file, "source = {}", theme_path.display()).unwrap();
+
+        let mut config = Config::default();
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
+
+        let result =
+            parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, true);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(theme_path);
+        let _ = fs::remove_file(config_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_parse_sources_no_equals_sign() {
+        let temp_dir = std::env::temp_dir().join("hydequery_no_equals_test");
+        let _ = fs::create_dir_all(&temp_dir);
+        let config_path = temp_dir.join("test.conf");
+        let mut file = fs::File::create(&config_path).unwrap();
+        writeln!(file, "source theme.conf").unwrap();
+
+        let mut config = Config::default();
+        let mut visited = HashSet::new();
+        visited.insert(config_path.clone());
 
         let result =
             parse_sources_recursive(&mut config, &config_path, &temp_dir, &mut visited, false);

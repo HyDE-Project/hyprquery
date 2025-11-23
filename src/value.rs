@@ -89,49 +89,142 @@ mod tests {
 
     #[test]
     fn test_hash_string_deterministic() {
-        let hash1 = hash_string("test");
-        let hash2 = hash_string("test");
+        let hash1 = hash_string("$GTK_THEME");
+        let hash2 = hash_string("$GTK_THEME");
         assert_eq!(hash1, hash2);
     }
 
     #[test]
-    fn test_hash_string_different() {
-        let hash1 = hash_string("test1");
-        let hash2 = hash_string("test2");
+    fn test_hash_string_different_vars() {
+        let hash1 = hash_string("$GTK_THEME");
+        let hash2 = hash_string("$ICON_THEME");
         assert_ne!(hash1, hash2);
     }
 
     #[test]
-    fn test_config_value_to_string_int() {
-        let value = hyprlang::ConfigValue::Int(42);
-        assert_eq!(config_value_to_string(&value), "42");
+    fn test_hash_string_cursor_theme() {
+        let hash = hash_string("$CURSOR_THEME");
+        assert!(hash > 0);
     }
 
     #[test]
-    fn test_config_value_to_string_float() {
-        let value = hyprlang::ConfigValue::Float(2.5);
-        assert_eq!(config_value_to_string(&value), "2.5");
+    fn test_config_value_to_string_border_size() {
+        let value = hyprlang::ConfigValue::Int(2);
+        assert_eq!(config_value_to_string(&value), "2");
     }
 
     #[test]
-    fn test_config_value_to_string_string() {
-        let value = hyprlang::ConfigValue::String("hello".to_string());
-        assert_eq!(config_value_to_string(&value), "hello");
+    fn test_config_value_to_string_cursor_size() {
+        let value = hyprlang::ConfigValue::Int(20);
+        assert_eq!(config_value_to_string(&value), "20");
     }
 
     #[test]
-    fn test_config_value_type_name() {
+    fn test_config_value_to_string_gaps() {
+        let value = hyprlang::ConfigValue::Int(8);
+        assert_eq!(config_value_to_string(&value), "8");
+    }
+
+    #[test]
+    fn test_config_value_to_string_float_opacity() {
+        let value = hyprlang::ConfigValue::Float(0.95);
+        assert_eq!(config_value_to_string(&value), "0.95");
+    }
+
+    #[test]
+    fn test_config_value_to_string_gtk_theme() {
+        let value = hyprlang::ConfigValue::String("Gruvbox-Retro".to_string());
+        assert_eq!(config_value_to_string(&value), "Gruvbox-Retro");
+    }
+
+    #[test]
+    fn test_config_value_to_string_icon_theme() {
+        let value = hyprlang::ConfigValue::String("Gruvbox-Plus-Dark".to_string());
+        assert_eq!(config_value_to_string(&value), "Gruvbox-Plus-Dark");
+    }
+
+    #[test]
+    fn test_config_value_to_string_color_scheme() {
+        let value = hyprlang::ConfigValue::String("prefer-dark".to_string());
+        assert_eq!(config_value_to_string(&value), "prefer-dark");
+    }
+
+    #[test]
+    fn test_config_value_to_string_vec2() {
+        let value = hyprlang::ConfigValue::Vec2(hyprlang::Vec2 {
+            x: 1920.0,
+            y: 1080.0
+        });
+        assert_eq!(config_value_to_string(&value), "1920, 1080");
+    }
+
+    #[test]
+    fn test_config_value_to_string_color_active_border() {
+        let value = hyprlang::ConfigValue::Color(hyprlang::Color {
+            r: 144,
+            g: 206,
+            b: 170,
+            a: 255
+        });
+        assert_eq!(config_value_to_string(&value), "rgba(144, 206, 170, 255)");
+    }
+
+    #[test]
+    fn test_config_value_to_string_color_inactive_border() {
+        let value = hyprlang::ConfigValue::Color(hyprlang::Color {
+            r: 30,
+            g: 139,
+            b: 80,
+            a: 217
+        });
+        assert_eq!(config_value_to_string(&value), "rgba(30, 139, 80, 217)");
+    }
+
+    #[test]
+    fn test_config_value_type_name_int() {
         assert_eq!(
-            config_value_type_name(&hyprlang::ConfigValue::Int(1)),
+            config_value_type_name(&hyprlang::ConfigValue::Int(2)),
             "INT"
         );
+    }
+
+    #[test]
+    fn test_config_value_type_name_float() {
         assert_eq!(
-            config_value_type_name(&hyprlang::ConfigValue::Float(1.0)),
+            config_value_type_name(&hyprlang::ConfigValue::Float(0.5)),
             "FLOAT"
         );
+    }
+
+    #[test]
+    fn test_config_value_type_name_string() {
         assert_eq!(
-            config_value_type_name(&hyprlang::ConfigValue::String("s".to_string())),
+            config_value_type_name(&hyprlang::ConfigValue::String("Gruvbox-Retro".to_string())),
             "STRING"
+        );
+    }
+
+    #[test]
+    fn test_config_value_type_name_vec2() {
+        assert_eq!(
+            config_value_type_name(&hyprlang::ConfigValue::Vec2(hyprlang::Vec2 {
+                x: 0.0,
+                y: 0.0
+            })),
+            "VEC2"
+        );
+    }
+
+    #[test]
+    fn test_config_value_type_name_color() {
+        assert_eq!(
+            config_value_type_name(&hyprlang::ConfigValue::Color(hyprlang::Color {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 0
+            })),
+            "COLOR"
         );
     }
 }
