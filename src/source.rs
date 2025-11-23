@@ -55,7 +55,21 @@ pub fn parse_sources_recursive(
         };
 
         let path_part = trimmed[eq_pos + 1..].trim();
-        let paths = resolve_glob(path_part, base_dir)?;
+        let path_part = path_part.split('#').next().unwrap_or("").trim();
+
+        if path_part.is_empty() {
+            continue;
+        }
+
+        let paths = match resolve_glob(path_part, base_dir) {
+            Ok(p) => p,
+            Err(e) => {
+                if debug {
+                    eprintln!("[debug] Failed to resolve: {} - {}", path_part, e);
+                }
+                continue;
+            }
+        };
 
         for source_path in paths {
             if !source_path.exists() || !source_path.is_file() {
