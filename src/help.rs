@@ -192,3 +192,67 @@ fn print_footer() {
 "
     );
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_print_help_no_panic() {
+        print_help();
+    }
+
+    #[test]
+    fn test_print_header_no_panic() {
+        print_header();
+    }
+
+    #[test]
+    fn test_print_usage_no_panic() {
+        print_usage();
+    }
+
+    #[test]
+    fn test_print_arguments_no_panic() {
+        print_arguments();
+    }
+
+    #[test]
+    fn test_print_options_no_panic() {
+        print_options();
+    }
+
+    #[test]
+    fn test_print_query_format_no_panic() {
+        print_query_format();
+    }
+
+    #[test]
+    fn test_print_examples_no_panic() {
+        print_examples();
+    }
+
+    #[test]
+    fn test_print_exit_codes_no_panic() {
+        print_exit_codes();
+    }
+
+    #[test]
+    fn test_print_footer_no_panic() {
+        print_footer();
+    }
+
+    #[test]
+    fn test_color_constants() {
+        assert_eq!(colors::RESET, "\x1b[0m");
+        assert_eq!(colors::BOLD, "\x1b[1m");
+        assert_eq!(colors::DIM, "\x1b[2m");
+        assert_eq!(colors::RED, "\x1b[31m");
+        assert_eq!(colors::GREEN, "\x1b[32m");
+        assert_eq!(colors::YELLOW, "\x1b[33m");
+        assert_eq!(colors::BLUE, "\x1b[34m");
+        assert_eq!(colors::MAGENTA, "\x1b[35m");
+        assert_eq!(colors::CYAN, "\x1b[36m");
+        assert_eq!(colors::WHITE, "\x1b[37m");
+    }
+}
