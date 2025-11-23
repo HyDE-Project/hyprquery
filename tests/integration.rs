@@ -307,3 +307,184 @@ decoration {
 
     cleanup_test_config(&path);
 }
+
+#[test]
+fn test_binary_help_flag() {
+    let output = std::process::Command::new("cargo")
+        .args(["run", "--release", "--", "-h"])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("USAGE") || stdout.contains("hydequery"));
+}
+
+#[test]
+fn test_binary_query_theme_variable() {
+    let content = "$GTK_THEME = Gruvbox-Retro";
+    let path = create_test_config("binary_theme.conf", content);
+
+    let output = std::process::Command::new("cargo")
+        .args([
+            "run",
+            "--release",
+            "--",
+            path.to_str().unwrap(),
+            "-Q",
+            "$GTK_THEME"
+        ])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Gruvbox-Retro"));
+
+    cleanup_test_config(&path);
+}
+
+#[test]
+fn test_binary_query_nested_key() {
+    let content = r#"
+general {
+    border_size = 2
+}
+"#;
+    let path = create_test_config("binary_nested.conf", content);
+
+    let output = std::process::Command::new("cargo")
+        .args([
+            "run",
+            "--release",
+            "--",
+            path.to_str().unwrap(),
+            "-Q",
+            "general:border_size"
+        ])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("2"));
+
+    cleanup_test_config(&path);
+}
+
+#[test]
+fn test_binary_json_export() {
+    let content = "$CURSOR_SIZE = 24";
+    let path = create_test_config("binary_json.conf", content);
+
+    let output = std::process::Command::new("cargo")
+        .args([
+            "run",
+            "--release",
+            "--",
+            path.to_str().unwrap(),
+            "-Q",
+            "$CURSOR_SIZE",
+            "--export",
+            "json"
+        ])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\"key\""));
+    assert!(stdout.contains("\"value\""));
+    assert!(stdout.contains("24"));
+
+    cleanup_test_config(&path);
+}
+
+#[test]
+fn test_binary_env_export() {
+    let content = "$COLOR_SCHEME = prefer-dark";
+    let path = create_test_config("binary_env.conf", content);
+
+    let output = std::process::Command::new("cargo")
+        .args([
+            "run",
+            "--release",
+            "--",
+            path.to_str().unwrap(),
+            "-Q",
+            "$COLOR_SCHEME",
+            "--export",
+            "env"
+        ])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("COLOR_SCHEME="));
+    assert!(stdout.contains("prefer-dark"));
+
+    cleanup_test_config(&path);
+}
+
+#[test]
+fn test_binary_missing_variable_exit_code() {
+    let content = "$GTK_THEME = Gruvbox-Retro";
+    let path = create_test_config("binary_missing.conf", content);
+
+    let output = std::process::Command::new("cargo")
+        .args([
+            "run",
+            "--release",
+            "--",
+            path.to_str().unwrap(),
+            "-Q",
+            "$NONEXISTENT"
+        ])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(!output.status.success());
+
+    cleanup_test_config(&path);
+}
+
+#[test]
+fn test_binary_allow_missing_flag() {
+    let content = "$GTK_THEME = Gruvbox-Retro";
+    let path = create_test_config("binary_allow.conf", content);
+
+    let output = std::process::Command::new("cargo")
+        .args([
+            "run",
+            "--release",
+            "--",
+            path.to_str().unwrap(),
+            "-Q",
+            "$NONEXISTENT",
+            "--allow-missing"
+        ])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+
+    cleanup_test_config(&path);
+}
+
+#[test]
+fn test_binary_config_not_found() {
+    let output = std::process::Command::new("cargo")
+        .args([
+            "run",
+            "--release",
+            "--",
+            "/nonexistent/config.conf",
+            "-Q",
+            "$GTK_THEME"
+        ])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(!output.status.success());
+}

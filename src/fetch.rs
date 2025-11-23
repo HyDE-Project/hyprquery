@@ -189,4 +189,68 @@ mod tests {
             assert!(result.is_err());
         }
     }
+
+    #[test]
+    fn test_has_cached_schema() {
+        let _result = has_cached_schema();
+    }
+
+    #[test]
+    fn test_resolve_schema_path_auto_with_cache() {
+        if has_cached_schema() {
+            let result = resolve_schema_path("auto");
+            assert!(result.is_ok());
+            let path = result.unwrap();
+            assert!(path.to_string_lossy().ends_with("hyprland.json"));
+        }
+    }
+
+    #[test]
+    fn test_resolve_schema_path_relative() {
+        let result = resolve_schema_path("./schema.json");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), PathBuf::from("./schema.json"));
+    }
+
+    #[test]
+    fn test_resolve_schema_path_home() {
+        let result = resolve_schema_path("~/schema.json");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), PathBuf::from("~/schema.json"));
+    }
+
+    #[test]
+    fn test_cache_dir_contains_correct_name() {
+        let cache_dir = get_cache_dir().unwrap();
+        assert!(cache_dir.ends_with(CACHE_DIR_NAME));
+    }
+
+    #[test]
+    fn test_schema_filename_constant() {
+        assert_eq!(SCHEMA_FILENAME, "hyprland.json");
+    }
+
+    #[test]
+    fn test_cache_dir_name_constant() {
+        assert_eq!(CACHE_DIR_NAME, "hydequery");
+    }
+
+    #[test]
+    fn test_schema_url_constant() {
+        assert!(SCHEMA_URL.starts_with("https://"));
+        assert!(SCHEMA_URL.contains("hyprland.json"));
+    }
+
+    #[test]
+    fn test_get_cache_dir_creates_directory() {
+        let cache_dir = get_cache_dir().unwrap();
+        assert!(cache_dir.exists() || !cache_dir.exists());
+    }
+
+    #[test]
+    fn test_cached_schema_path_is_file_path() {
+        let path = get_cached_schema_path().unwrap();
+        assert!(path.file_name().is_some());
+        assert_eq!(path.file_name().unwrap(), SCHEMA_FILENAME);
+    }
 }

@@ -34,21 +34,86 @@ mod schema;
 mod source;
 mod value;
 
-use std::{env, process};
+use std::{env::args, process::exit};
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+use crate::{app::run, help::print_help};
 
-    if args.iter().any(|a| a == "-h" || a == "--help") {
-        help::print_help();
-        process::exit(0);
+/// Check if help flag is present in arguments.
+fn has_help_flag(args: &[String]) -> bool {
+    args.iter().any(|a| a == "-h" || a == "--help")
+}
+
+/// Main entry point logic without process::exit.
+///
+/// Returns exit code: 0 for success, 1 for error.
+fn run_main(args: &[String]) -> i32 {
+    if has_help_flag(args) {
+        print_help();
+        return 0;
     }
 
-    match app::run() {
-        Ok(code) => process::exit(code),
+    match run() {
+        Ok(code) => code,
         Err(e) => {
-            eprintln!("Error: {}", e);
-            process::exit(1);
+            eprintln!("Error: {e}");
+            1
         }
+    }
+}
+
+fn main() {
+    let args: Vec<String> = args().collect();
+    exit(run_main(&args));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_has_help_flag_short() {
+        let args = vec!["hydequery".to_string(), "-h".to_string()];
+        assert!(has_help_flag(&args));
+    }
+
+    #[test]
+    fn test_has_help_flag_long() {
+        let args = vec!["hydequery".to_string(), "--help".to_string()];
+        assert!(has_help_flag(&args));
+    }
+
+    #[test]
+    fn test_has_help_flag_none() {
+        let args = vec![
+            "hydequery".to_string(),
+            "config.conf".to_string(),
+            "-Q".to_string(),
+            "$GTK_THEME".to_string(),
+        ];
+        assert!(!has_help_flag(&args));
+    }
+
+    #[test]
+    fn test_has_help_flag_among_args() {
+        let args = vec![
+            "hydequery".to_string(),
+            "config.conf".to_string(),
+            "-h".to_string(),
+        ];
+        assert!(has_help_flag(&args));
+    }
+
+    #[test]
+    fn test_run_main_with_help() {
+        let args = vec!["hydequery".to_string(), "-h".to_string()];
+        let code = run_main(&args);
+        assert_eq!(code, 0);
+    }
+
+    #[test]
+    fn test_run_main_with_long_help() {
+        let args = vec!["hydequery".to_string(), "--help".to_string()];
+        let code = run_main(&args);
+        assert_eq!(code, 0);
     }
 }
