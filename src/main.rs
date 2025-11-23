@@ -55,7 +55,11 @@ fn run_main(args: &[String]) -> i32 {
     match run() {
         Ok(code) => code,
         Err(e) => {
-            eprintln!("Error: {e}");
+            if let Some(msg) = &e.message {
+                eprintln!("Error: {msg}");
+            } else {
+                eprintln!("Error: {e}");
+            }
             1
         }
     }

@@ -95,6 +95,15 @@ pub fn from_regex(err: regex::Error) -> AppError {
     invalid_query(&err.to_string())
 }
 
+/// Create a validation error for missing or invalid arguments.
+///
+/// # Arguments
+///
+/// * `msg` - Validation error message
+pub fn validation_error(msg: &str) -> AppError {
+    AppError::bad_request(msg.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,5 +164,13 @@ mod tests {
         let regex_err = regex::Regex::new(&pattern).unwrap_err();
         let app_err = from_regex(regex_err);
         assert!(!app_err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_validation_error() {
+        let err = validation_error("missing argument");
+        assert!(!err.to_string().is_empty());
+        assert!(err.message.is_some());
+        assert_eq!(err.message.as_deref(), Some("missing argument"));
     }
 }

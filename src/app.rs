@@ -17,7 +17,7 @@ use masterror::AppResult;
 use crate::{
     cli::Args,
     defaults::handle_get_defaults,
-    error::{config_not_found, config_parse, from_io, schema_not_found},
+    error::{config_not_found, config_parse, from_io, schema_not_found, validation_error},
     export::{export_env, export_json, export_plain},
     fetch::{fetch_schema, resolve_schema_path},
     filters::apply_filters,
@@ -72,7 +72,12 @@ pub fn run_with_args(args: Args) -> AppResult<i32> {
         return Ok(0);
     }
 
-    let config_path = normalize_path(&args.config_file)?;
+    let config_file = match &args.config_file {
+        Some(path) => path,
+        None => return Err(validation_error("Configuration file is required"))
+    };
+
+    let config_path = normalize_path(config_file)?;
     if !config_path.exists() {
         return Err(config_not_found(&config_path.display().to_string()));
     }
@@ -84,6 +89,12 @@ pub fn run_with_args(args: Args) -> AppResult<i32> {
 
     if args.get_defaults {
         return handle_get_defaults(&args);
+    }
+
+    if args.queries.is_empty() {
+        return Err(validation_error(
+            "No queries specified. Use -Q to specify queries"
+        ));
     }
 
     let queries = parse_query_inputs(&args.queries);
@@ -239,7 +250,7 @@ mod tests {
     fn make_args(config_file: &str, queries: Vec<&str>) -> Args {
         Args {
             help:          false,
-            config_file:   config_file.to_string(),
+            config_file:   Some(config_file.to_string()),
             queries:       queries.into_iter().map(String::from).collect(),
             schema:        None,
             fetch_schema:  false,

@@ -79,7 +79,7 @@ mod tests {
     fn make_args_with_schema(schema_path: &str) -> Args {
         Args {
             help:          false,
-            config_file:   "/tmp/dummy.conf".to_string(),
+            config_file:   Some("/tmp/dummy.conf".to_string()),
             queries:       vec![],
             schema:        Some(schema_path.to_string()),
             fetch_schema:  false,
@@ -97,7 +97,7 @@ mod tests {
     fn test_handle_get_defaults_no_schema() {
         let args = Args {
             help:          false,
-            config_file:   "/tmp/dummy.conf".to_string(),
+            config_file:   Some("/tmp/dummy.conf".to_string()),
             queries:       vec![],
             schema:        None,
             fetch_schema:  false,

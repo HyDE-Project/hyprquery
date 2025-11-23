@@ -58,6 +58,8 @@ fn print_usage() {
         "{YELLOW}{BOLD}USAGE:{RESET}
     {GREEN}hydequery{RESET} {CYAN}<CONFIG_FILE>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY>{RESET} [{DIM}OPTIONS{RESET}]
     {GREEN}hydequery{RESET} {CYAN}<CONFIG_FILE>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY1>{RESET} {MAGENTA}-Q{RESET} {BLUE}<QUERY2>{RESET} ...
+    {GREEN}hydequery{RESET} {CYAN}<CONFIG_FILE>{RESET} {MAGENTA}--get-defaults{RESET} {MAGENTA}--schema{RESET} {BLUE}<PATH>{RESET}
+    {GREEN}hydequery{RESET} {MAGENTA}--fetch-schema{RESET}
 "
     );
 }

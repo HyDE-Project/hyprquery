@@ -19,11 +19,11 @@ pub struct Args {
     #[arg(short = 'h', long = "help")]
     pub help:        bool,
     /// Configuration file path
-    #[arg(required = true)]
-    pub config_file: String,
+    #[arg(required = false)]
+    pub config_file: Option<String>,
 
     /// Query to execute (format: `query[expectedType][expectedRegex]`)
-    #[arg(short = 'Q', long = "query", required = true, num_args = 1..)]
+    #[arg(short = 'Q', long = "query", num_args = 1..)]
     pub queries: Vec<String>,
 
     /// Schema file path (use "auto" for cached schema)
