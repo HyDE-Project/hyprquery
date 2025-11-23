@@ -135,6 +135,12 @@ hydequery --fetch-schema
 hydequery config.conf -Q 'general:layout' --schema auto
 ```
 
+### Get all default keys from schema
+
+```bash
+hydequery config.conf --schema auto --get-defaults
+```
+
 ### With custom schema
 
 ```bash
@@ -152,7 +158,7 @@ hydequery config.conf -Q 'a' -Q 'b' -D ','
 
 | Option | Description |
 |--------|-------------|
-| `-Q, --query <QUERY>` | Query to execute (required, multiple allowed) |
+| `-Q, --query <QUERY>` | Query to execute (multiple allowed) |
 | `--schema <PATH>` | Load schema file (use `auto` for cached) |
 | `--fetch-schema` | Download and cache latest schema |
 | `--get-defaults` | Output all keys from schema |
@@ -226,18 +232,20 @@ Schema files define default values for configuration options:
 
 ```
 src/
-├── main.rs     # Entry point
-├── app.rs      # Core application logic
-├── cli.rs      # CLI argument definitions
-├── error.rs    # Error handling (masterror)
-├── export.rs   # Output formatters (JSON, env, plain)
-├── fetch.rs    # Schema fetching and caching
-├── help.rs     # Colorful help display
-├── path.rs     # Path normalization and glob resolution
-├── query.rs    # Query parsing
-├── schema.rs   # Schema loading
-├── source.rs   # Source directive handling
-└── value.rs    # Config value conversion
+├── main.rs      # Entry point
+├── app.rs       # Core application logic
+├── cli.rs       # CLI argument definitions
+├── defaults.rs  # Schema defaults handling
+├── error.rs     # Error handling (masterror)
+├── export.rs    # Output formatters (JSON, env, plain)
+├── fetch.rs     # Schema fetching and caching
+├── filters.rs   # Type and regex filtering
+├── help.rs      # Colorful help display
+├── path.rs      # Path normalization and glob resolution
+├── query.rs     # Query parsing
+├── schema.rs    # Schema loading
+├── source.rs    # Source directive handling
+└── value.rs     # Config value conversion
 ```
 
 ## Performance
