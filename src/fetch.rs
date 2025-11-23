@@ -12,11 +12,14 @@
 //! ```no_run
 //! use hydequery::fetch;
 //!
-//! // Fetch and cache the schema
-//! fetch::fetch_schema()?;
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Fetch and cache the schema
+//!     fetch::fetch_schema()?;
 //!
-//! // Get the cached schema path
-//! let path = fetch::get_cached_schema_path()?;
+//!     // Get the cached schema path
+//!     let path = fetch::get_cached_schema_path()?;
+//!     Ok(())
+//! }
 //! ```
 
 use std::{fs, io::Write, path::PathBuf};
@@ -102,8 +105,11 @@ pub fn has_cached_schema() -> bool {
 /// ```no_run
 /// use hydequery::fetch;
 ///
-/// let path = fetch::fetch_schema()?;
-/// println!("Schema cached at: {}", path.display());
+/// fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let path = fetch::fetch_schema()?;
+///     println!("Schema cached at: {}", path.display());
+///     Ok(())
+/// }
 /// ```
 pub fn fetch_schema() -> Result<PathBuf, AppError> {
     let body = ureq::get(SCHEMA_URL)

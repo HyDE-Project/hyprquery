@@ -9,7 +9,7 @@ use clap::Parser;
 ///
 /// Defines all available options, flags, and positional arguments.
 /// Uses clap's derive API for automatic parsing and help generation.
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(name = "hydequery")]
 #[command(version)]
 #[command(about = "A configuration parser for hypr* config files")]

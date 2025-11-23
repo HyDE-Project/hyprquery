@@ -24,6 +24,13 @@ shellexpand = "3"
 dirs = "6"
 ureq = "3"
 
+[dev-dependencies]
+criterion = "0.7"
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
 [profile.release]
 lto = true
 codegen-units = 1
