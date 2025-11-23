@@ -47,7 +47,24 @@ use crate::{
 /// - Invalid regex pattern in query
 pub fn run() -> Result<i32, AppError> {
     let args = Args::parse();
+    run_with_args(args)
+}
 
+/// Execute application logic with provided arguments.
+///
+/// This is the core implementation that can be tested directly.
+///
+/// # Arguments
+///
+/// * `args` - Parsed command-line arguments
+///
+/// # Returns
+///
+/// - `Ok(0)` - All queries resolved successfully
+/// - `Ok(1)` - One or more queries returned NULL (unless `--allow-missing` is
+///   set)
+/// - `Err(AppError)` - Fatal error occurred during execution
+pub fn run_with_args(args: Args) -> Result<i32, AppError> {
     if args.fetch_schema {
         let path = fetch::fetch_schema()?;
         println!("Schema cached at: {}", path.display());
@@ -306,7 +323,555 @@ fn apply_filters(
 
 #[cfg(test)]
 mod tests {
+    use std::{fs, io::Write};
+
     use super::*;
+
+    fn create_test_config(name: &str, content: &str) -> PathBuf {
+        let temp_dir = std::env::temp_dir().join("hydequery_app_test");
+        let _ = fs::create_dir_all(&temp_dir);
+        let path = temp_dir.join(name);
+        let mut file = fs::File::create(&path).unwrap();
+        write!(file, "{}", content).unwrap();
+        path
+    }
+
+    fn make_args(config_file: &str, queries: Vec<&str>) -> Args {
+        Args {
+            help:          false,
+            config_file:   config_file.to_string(),
+            queries:       queries.into_iter().map(String::from).collect(),
+            schema:        None,
+            fetch_schema:  false,
+            allow_missing: false,
+            get_defaults:  false,
+            strict:        false,
+            export:        None,
+            source:        false,
+            debug:         false,
+            delimiter:     "\n".to_string()
+        }
+    }
+
+    #[test]
+    fn test_run_with_args_theme_variables() {
+        let content = r#"
+$GTK_THEME = Gruvbox-Retro
+$ICON_THEME = Gruvbox-Plus-Dark
+$CURSOR_SIZE = 20
+"#;
+        let path = create_test_config("theme_run.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec!["$GTK_THEME", "$ICON_THEME", "$CURSOR_SIZE"]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_general_settings() {
+        let content = r#"
+general {
+    gaps_in = 3
+    gaps_out = 8
+    border_size = 2
+}
+"#;
+        let path = create_test_config("general_run.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec!["general:gaps_in", "general:border_size"]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_missing_variable() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("missing_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$FONT"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_allow_missing() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("allow_missing_run.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$FONT"]);
+        args.allow_missing = true;
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_json_export() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("json_run.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME"]);
+        args.export = Some("json".to_string());
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_env_export() {
+        let content = r#"
+$GTK_THEME = Gruvbox-Retro
+$CURSOR_SIZE = 20
+"#;
+        let path = create_test_config("env_run.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME", "$CURSOR_SIZE"]);
+        args.export = Some("env".to_string());
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_config_not_found() {
+        let args = make_args("/nonexistent/path.conf", vec!["$GTK_THEME"]);
+        let result = run_with_args(args);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_run_with_args_source_directive() {
+        let temp_dir = std::env::temp_dir().join("hydequery_source_run");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let theme_path = temp_dir.join("theme.conf");
+        let mut theme_file = fs::File::create(&theme_path).unwrap();
+        writeln!(theme_file, "$GTK_THEME = Wallbash-Gtk").unwrap();
+
+        let main_path = temp_dir.join("main.conf");
+        let mut main_file = fs::File::create(&main_path).unwrap();
+        writeln!(main_file, "source = {}", theme_path.display()).unwrap();
+
+        let mut args = make_args(main_path.to_str().unwrap(), vec!["$GTK_THEME"]);
+        args.source = true;
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(theme_path);
+        let _ = fs::remove_file(main_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_run_with_args_custom_delimiter() {
+        let content = r#"
+$GTK_THEME = Gruvbox-Retro
+$ICON_THEME = Gruvbox-Plus-Dark
+"#;
+        let path = create_test_config("delim_run.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME", "$ICON_THEME"]);
+        args.delimiter = ",".to_string();
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_strict_mode() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("strict_run.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME"]);
+        args.strict = true;
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_debug_mode() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("debug_run.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME"]);
+        args.debug = true;
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_decoration_settings() {
+        let content = r#"
+decoration {
+    rounding = 3
+    blur {
+        enabled = yes
+        size = 4
+    }
+}
+"#;
+        let path = create_test_config("decoration_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["decoration:rounding"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_color_scheme() {
+        let content = "$COLOR_SCHEME = prefer-dark";
+        let path = create_test_config("color_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$COLOR_SCHEME"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_cursor_theme() {
+        let content = r#"
+$CURSOR_THEME = Bibata-Modern-Ice
+$CURSOR_SIZE = 24
+"#;
+        let path = create_test_config("cursor_run.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec!["$CURSOR_THEME", "$CURSOR_SIZE"]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_multiple_missing() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("multi_missing_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$FONT", "$SDDM_THEME"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_with_type_filter() {
+        let content = r#"
+general {
+    border_size = 2
+    gaps_in = 3
+}
+"#;
+        let path = create_test_config("type_filter_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["general:border_size[INT]"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_with_regex_filter() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("regex_filter_run.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec!["$GTK_THEME[STRING][^Gruvbox.*$]"]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_type_mismatch_returns_null() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("type_mismatch_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME[INT]"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_regex_no_match_returns_null() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("regex_nomatch_run.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec!["$GTK_THEME[STRING][^Adwaita$]"]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_mixed_found_and_missing() {
+        let content = r#"
+$GTK_THEME = Gruvbox-Retro
+$CURSOR_SIZE = 20
+"#;
+        let path = create_test_config("mixed_run.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec!["$GTK_THEME", "$FONT", "$CURSOR_SIZE"]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_nested_key_not_found() {
+        let content = r#"
+general {
+    gaps_in = 3
+}
+"#;
+        let path = create_test_config("nested_missing_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["general:nonexistent"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_empty_config() {
+        let content = "";
+        let path = create_test_config("empty_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_source_with_comment() {
+        let temp_dir = std::env::temp_dir().join("hydequery_source_comment");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let theme_path = temp_dir.join("theme.conf");
+        let mut theme_file = fs::File::create(&theme_path).unwrap();
+        writeln!(theme_file, "$GTK_THEME = Wallbash-Gtk").unwrap();
+
+        let main_path = temp_dir.join("main.conf");
+        let mut main_file = fs::File::create(&main_path).unwrap();
+        writeln!(
+            main_file,
+            "source = {} # theme settings",
+            theme_path.display()
+        )
+        .unwrap();
+
+        let mut args = make_args(main_path.to_str().unwrap(), vec!["$GTK_THEME"]);
+        args.source = true;
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(theme_path);
+        let _ = fs::remove_file(main_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_run_with_args_parent_dir_fallback() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("parent_run.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_get_defaults_no_schema() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("defaults_no_schema.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME"]);
+        args.get_defaults = true;
+
+        let result = run_with_args(args);
+        assert!(result.is_err());
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_schema_not_found() {
+        let content = "$GTK_THEME = Gruvbox-Retro";
+        let path = create_test_config("schema_missing.conf", content);
+        let mut args = make_args(path.to_str().unwrap(), vec!["$GTK_THEME"]);
+        args.schema = Some("/nonexistent/schema.json".to_string());
+
+        let result = run_with_args(args);
+        assert!(result.is_err());
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_dynamic_variable_not_resolved() {
+        let content = "";
+        let path = create_test_config("dynamic_unresolved.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$NONEXISTENT_VAR"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_static_key_with_source() {
+        let temp_dir = std::env::temp_dir().join("hydequery_static_source");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let theme_path = temp_dir.join("theme.conf");
+        let mut theme_file = fs::File::create(&theme_path).unwrap();
+        writeln!(theme_file, "general {{").unwrap();
+        writeln!(theme_file, "    border_size = 2").unwrap();
+        writeln!(theme_file, "}}").unwrap();
+
+        let main_path = temp_dir.join("main.conf");
+        let mut main_file = fs::File::create(&main_path).unwrap();
+        writeln!(main_file, "source = {}", theme_path.display()).unwrap();
+
+        let mut args = make_args(main_path.to_str().unwrap(), vec!["general:border_size"]);
+        args.source = true;
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(theme_path);
+        let _ = fs::remove_file(main_path);
+        let _ = fs::remove_dir(temp_dir);
+    }
+
+    #[test]
+    fn test_run_with_args_multiple_queries_all_found() {
+        let content = r#"
+$GTK_THEME = Gruvbox-Retro
+$ICON_THEME = Gruvbox-Plus-Dark
+$CURSOR_THEME = Bibata-Modern-Ice
+$CURSOR_SIZE = 24
+$COLOR_SCHEME = prefer-dark
+"#;
+        let path = create_test_config("all_found.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec![
+                "$GTK_THEME",
+                "$ICON_THEME",
+                "$CURSOR_THEME",
+                "$CURSOR_SIZE",
+                "$COLOR_SCHEME",
+            ]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_type_filter_float() {
+        let content = r#"
+decoration {
+    active_opacity = 0.95
+}
+"#;
+        let path = create_test_config("float_type.conf", content);
+        let args = make_args(
+            path.to_str().unwrap(),
+            vec!["decoration:active_opacity[FLOAT]"]
+        );
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_run_with_args_variable_value_equals_query() {
+        let content = "$TEST = $TEST";
+        let path = create_test_config("var_equals_query.conf", content);
+        let args = make_args(path.to_str().unwrap(), vec!["$TEST"]);
+
+        let result = run_with_args(args);
+        assert!(result.is_ok());
+
+        let _ = fs::remove_file(path);
+    }
 
     #[test]
     fn test_apply_filters_no_filters() {
