@@ -1,0 +1,239 @@
+.TH HYQ 1 "November 2025" "hyprquery 0.2.0" "User Commands"
+.SH NAME
+hyq \- High-performance configuration parser for Hyprland
+.SH SYNOPSIS
+.B hyq
+.RI [ OPTIONS ]
+.I CONFIG_FILE
+.B \-Q
+.I QUERY
+.RI [ \-Q
+.IR QUERY .\|.\|.]
+.br
+.B hyq
+.B \-\-fetch\-schema
+.br
+.B hyq
+.B \-\-help
+|
+.B \-\-version
+.SH DESCRIPTION
+.B hyq
+is a blazing-fast CLI tool written in Rust for querying values from Hyprland
+configuration files. It supports nested keys, dynamic variables, type filtering,
+regex matching, and multiple export formats.
+.PP
+The tool parses standard Hyprland configuration format including nested sections,
+variable definitions, and source directives.
+.SH OPTIONS
+.SS "Required Arguments"
+.TP
+.I CONFIG_FILE
+Path to the Hyprland configuration file.
+Supports tilde (~), environment variables, and glob patterns.
+.TP
+.BI \-Q ", " \-\-query " " \fIQUERY\fR
+Query to execute. Can be specified multiple times for multiple queries.
+.br
+Format: \fBkey[type][regex]\fR
+.SS "Schema Options"
+.TP
+.BI \-\-schema " " \fIPATH\fR
+Load schema file for default values.
+Use \fBauto\fR to load from cache (~/.cache/hyprquery/hyprland.json).
+.TP
+.B \-\-fetch\-schema
+Download and cache the latest schema from repository.
+Schema is saved to ~/.cache/hyprquery/hyprland.json.
+.TP
+.B \-\-get\-defaults
+Output all configuration keys defined in the schema file.
+Requires \fB\-\-schema\fR to be specified.
+.SS "Output Options"
+.TP
+.BI \-\-export " " \fIFORMAT\fR
+Output format. Supported values:
+.RS
+.IP \fBjson\fR
+JSON object or array with key, value, and type fields.
+.IP \fBenv\fR
+Environment variable assignments (KEY="value").
+.RE
+.TP
+.BI \-D ", " \-\-delimiter " " \fISTR\fR
+Delimiter for plain text output when multiple queries are specified.
+Default: newline (\\n).
+.SS "Behavior Options"
+.TP
+.B \-s ", " \-\-source
+Follow source directives recursively.
+Parses all included configuration files with cycle detection.
+.TP
+.B \-\-allow\-missing
+Don't exit with code 1 when queries return NULL values.
+.TP
+.B \-\-strict
+Exit with error on configuration parse failures.
+By default, parse errors are silently ignored.
+.TP
+.B \-\-debug
+Enable debug logging to stderr.
+Shows internal operations like key lookups and injected lines.
+.SS "Information"
+.TP
+.B \-h ", " \-\-help
+Display colorful help message with examples and exit.
+.TP
+.B \-V ", " \-\-version
+Display version information and exit.
+.SH QUERY FORMAT
+Queries follow the format: \fBkey[type][regex]\fR
+.TP
+.B key
+Simple configuration key lookup.
+Nested keys use colon (:) separator, e.g., \fBgeneral:border_size\fR.
+.TP
+.B $variable
+Dynamic variable lookup, e.g., \fB$terminal\fR.
+.TP
+.B [type]
+Optional type filter. Value must match the specified type.
+.br
+Types: \fBINT\fR, \fBFLOAT\fR, \fBSTRING\fR, \fBVEC2\fR, \fBCOLOR\fR, \fBBOOL\fR
+.TP
+.B [regex]
+Optional regex pattern. Value must match the pattern.
+.SH EXIT STATUS
+.TP
+.B 0
+All queries resolved successfully.
+.TP
+.B 1
+One or more queries returned NULL, or an error occurred.
+With \fB\-\-allow\-missing\fR, NULL values don't cause exit code 1.
+.SH EXAMPLES
+.SS "Basic Queries"
+Query a simple configuration value:
+.PP
+.RS
+.nf
+hyq ~/.config/hypr/hyprland.conf -Q 'general:border_size'
+.fi
+.RE
+.PP
+Query a dynamic variable:
+.PP
+.RS
+.nf
+hyq config.conf -Q '$terminal'
+.fi
+.RE
+.PP
+Multiple queries:
+.PP
+.RS
+.nf
+hyq config.conf -Q 'general:gaps_in' -Q 'general:gaps_out'
+.fi
+.RE
+.SS "Type and Regex Filtering"
+Query with type filter:
+.PP
+.RS
+.nf
+hyq config.conf -Q 'general:border_size[INT]'
+.fi
+.RE
+.PP
+Query with type and regex filter:
+.PP
+.RS
+.nf
+hyq config.conf -Q 'decoration:rounding[INT][^[0-9]+$]'
+.fi
+.RE
+.SS "Export Formats"
+JSON export:
+.PP
+.RS
+.nf
+hyq config.conf -Q 'general:border_size' --export json
+.fi
+.RE
+.PP
+Environment variable export:
+.PP
+.RS
+.nf
+hyq config.conf -Q '$terminal' --export env
+.fi
+.RE
+.SS "Schema Operations"
+Fetch and cache schema:
+.PP
+.RS
+.nf
+hyq --fetch-schema
+.fi
+.RE
+.PP
+Use cached schema:
+.PP
+.RS
+.nf
+hyq config.conf -Q 'general:layout' --schema auto
+.fi
+.RE
+.PP
+Get all default keys:
+.PP
+.RS
+.nf
+hyq config.conf --schema auto --get-defaults
+.fi
+.RE
+.SS "Advanced Usage"
+Follow source directives:
+.PP
+.RS
+.nf
+hyq config.conf -Q 'colors:background' -s
+.fi
+.RE
+.PP
+Custom delimiter for scripting:
+.PP
+.RS
+.nf
+hyq config.conf -Q 'a' -Q 'b' -D ','
+.fi
+.RE
+.SH FILES
+.TP
+.I ~/.cache/hyprquery/hyprland.json
+Cached schema file downloaded by \fB\-\-fetch\-schema\fR.
+.TP
+.I ~/.config/hypr/hyprland.conf
+Default Hyprland configuration file location.
+.SH ENVIRONMENT
+.TP
+.B HOME
+Used for tilde (~) expansion in paths.
+.TP
+.B XDG_CACHE_HOME
+Used to determine cache directory location.
+Defaults to ~/.cache if not set.
+.SH SEE ALSO
+.BR hyprland (1),
+.BR hyprctl (1)
+.PP
+Hyprland Wiki: https://wiki.hypr.land/
+.SH BUGS
+Report bugs at: https://github.com/HyDE-Project/hyprquery/issues
+.SH AUTHORS
+Written by RAprogramm <andrey.rozanov.vl@gmail.com>.
+.PP
+Part of the HyDE (Hyprland Desktop Environment) project.
+.SH COPYRIGHT
+Copyright \(co 2025 HyDE Project.
+Licensed under GPL-3.0.

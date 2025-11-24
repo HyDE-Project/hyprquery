@@ -1,0 +1,43 @@
+[package]
+name = "hyprquery"
+version = "0.2.0"
+edition = "2024"
+authors = ["RAprogramm <andrey.rozanov.vl@gmail.com>"]
+description = "A command-line utility for querying configuration values from Hyprland configuration files"
+license = "GPL-3.0"
+repository = "https://github.com/HyDE-Project/hyprquery"
+keywords = ["hyprland", "configuration", "query", "cli"]
+categories = ["command-line-utilities", "config"]
+
+[[bin]]
+name = "hyq"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+hyprlang = { git = "https://github.com/spinualexandru/hyprlang-rs", features = [
+  "hyprland",
+  "mutation",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+masterror = "0.25"
+regex = "1"
+glob = "0.3"
+shellexpand = "3"
+dirs = "6"
+ureq = "3"
+
+[dev-dependencies]
+criterion = "0.7"
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+strip = true
+panic = "abort"
