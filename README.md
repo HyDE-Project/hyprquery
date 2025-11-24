@@ -1,8 +1,8 @@
-![HyDE Banner](https://raw.githubusercontent.com/HyDE-Project/HyDE/master/Source/assets/hyde_banner.png)
-
 > [!WARNING]
 >
 > EXPERIMENTAL branch. porting to rust.
+
+![HyDE Banner](https://raw.githubusercontent.com/HyDE-Project/HyDE/master/Source/assets/hyde_banner.png)
 
 # Hyprquery
 
