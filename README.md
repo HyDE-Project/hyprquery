@@ -1,6 +1,6 @@
 ![HyDE Banner](https://raw.githubusercontent.com/HyDE-Project/HyDE/master/Source/assets/hyde_banner.png)
 
-# Hydequery
+# Hyprquery
 
 [![CI](https://github.com/HyDE-Project/hyprquery/actions/workflows/ci.yml/badge.svg)](https://github.com/HyDE-Project/hyprquery/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/HyDE-Project/hyprquery/graph/badge.svg)](https://codecov.io/gh/HyDE-Project/hyprquery)
@@ -26,10 +26,10 @@ A blazing-fast CLI tool written in Rust for querying values from Hyprland config
 ### From source
 
 ```bash
-git clone https://github.com/HyDE-Project/hydequery
-cd hydequery
+git clone https://github.com/HyDE-Project/hyprquery
+cd hyprquery
 cargo build --release
-sudo cp target/release/hydequery /usr/local/bin/
+sudo cp target/release/hyq /usr/local/bin/
 ```
 
 ### Requirements
@@ -42,7 +42,7 @@ sudo cp target/release/hydequery /usr/local/bin/
 ### Basic syntax
 
 ```bash
-hydequery <CONFIG_FILE> -Q <QUERY> [OPTIONS]
+hyq <CONFIG_FILE> -Q <QUERY> [OPTIONS]
 ```
 
 ### Query format
@@ -61,21 +61,21 @@ $variable              # Dynamic variable
 ### Basic query
 
 ```bash
-hydequery ~/.config/hypr/hyprland.conf -Q 'general:border_size'
+hyq ~/.config/hypr/hyprland.conf -Q 'general:border_size'
 # Output: 2
 ```
 
 ### Query variable
 
 ```bash
-hydequery config.conf -Q '$terminal'
+hyq config.conf -Q '$terminal'
 # Output: kitty
 ```
 
 ### Multiple queries
 
 ```bash
-hydequery config.conf -Q 'general:gaps_in' -Q 'general:gaps_out'
+hyq config.conf -Q 'general:gaps_in' -Q 'general:gaps_out'
 # Output:
 # 5
 # 10
@@ -84,21 +84,21 @@ hydequery config.conf -Q 'general:gaps_in' -Q 'general:gaps_out'
 ### With type filter
 
 ```bash
-hydequery config.conf -Q 'general:border_size[INT]'
+hyq config.conf -Q 'general:border_size[INT]'
 # Output: 2
 ```
 
 ### With regex filter
 
 ```bash
-hydequery config.conf -Q 'decoration:rounding[INT][^[0-9]+$]'
+hyq config.conf -Q 'decoration:rounding[INT][^[0-9]+$]'
 # Output: 8
 ```
 
 ### JSON export
 
 ```bash
-hydequery config.conf -Q 'general:border_size' --export json
+hyq config.conf -Q 'general:border_size' --export json
 ```
 
 ```json
@@ -112,45 +112,45 @@ hydequery config.conf -Q 'general:border_size' --export json
 ### Environment variables export
 
 ```bash
-hydequery config.conf -Q '$terminal' --export env
+hyq config.conf -Q '$terminal' --export env
 # Output: TERMINAL="kitty"
 ```
 
 ### Follow source directives
 
 ```bash
-hydequery config.conf -Q 'colors:background' -s
+hyq config.conf -Q 'colors:background' -s
 ```
 
 ### Fetch and cache schema
 
 ```bash
-hydequery --fetch-schema
-# Output: Schema cached at: ~/.cache/hydequery/hyprland.json
+hyq --fetch-schema
+# Output: Schema cached at: ~/.cache/hyprquery/hyprland.json
 ```
 
 ### Use cached schema
 
 ```bash
-hydequery config.conf -Q 'general:layout' --schema auto
+hyq config.conf -Q 'general:layout' --schema auto
 ```
 
 ### Get all default keys from schema
 
 ```bash
-hydequery config.conf --schema auto --get-defaults
+hyq config.conf --schema auto --get-defaults
 ```
 
 ### With custom schema
 
 ```bash
-hydequery config.conf -Q 'general:layout' --schema hyprland.json
+hyq config.conf -Q 'general:layout' --schema hyprland.json
 ```
 
 ### Custom delimiter
 
 ```bash
-hydequery config.conf -Q 'a' -Q 'b' -D ','
+hyq config.conf -Q 'a' -Q 'b' -D ','
 # Output: val1,val2
 ```
 

@@ -1,8 +1,8 @@
-.TH HYDEQUERY 1 "November 2025" "hydequery 0.2.0" "User Commands"
+.TH HYQ 1 "November 2025" "hyprquery 0.2.0" "User Commands"
 .SH NAME
-hydequery \- High-performance configuration parser for Hyprland
+hyq \- High-performance configuration parser for Hyprland
 .SH SYNOPSIS
-.B hydequery
+.B hyq
 .RI [ OPTIONS ]
 .I CONFIG_FILE
 .B \-Q
@@ -10,15 +10,15 @@ hydequery \- High-performance configuration parser for Hyprland
 .RI [ \-Q
 .IR QUERY .\|.\|.]
 .br
-.B hydequery
+.B hyq
 .B \-\-fetch\-schema
 .br
-.B hydequery
+.B hyq
 .B \-\-help
 |
 .B \-\-version
 .SH DESCRIPTION
-.B hydequery
+.B hyq
 is a blazing-fast CLI tool written in Rust for querying values from Hyprland
 configuration files. It supports nested keys, dynamic variables, type filtering,
 regex matching, and multiple export formats.
@@ -40,11 +40,11 @@ Format: \fBkey[type][regex]\fR
 .TP
 .BI \-\-schema " " \fIPATH\fR
 Load schema file for default values.
-Use \fBauto\fR to load from cache (~/.cache/hydequery/hyprland.json).
+Use \fBauto\fR to load from cache (~/.cache/hyprquery/hyprland.json).
 .TP
 .B \-\-fetch\-schema
 Download and cache the latest schema from repository.
-Schema is saved to ~/.cache/hydequery/hyprland.json.
+Schema is saved to ~/.cache/hyprquery/hyprland.json.
 .TP
 .B \-\-get\-defaults
 Output all configuration keys defined in the schema file.
@@ -117,7 +117,7 @@ Query a simple configuration value:
 .PP
 .RS
 .nf
-hydequery ~/.config/hypr/hyprland.conf -Q 'general:border_size'
+hyq ~/.config/hypr/hyprland.conf -Q 'general:border_size'
 .fi
 .RE
 .PP
@@ -125,7 +125,7 @@ Query a dynamic variable:
 .PP
 .RS
 .nf
-hydequery config.conf -Q '$terminal'
+hyq config.conf -Q '$terminal'
 .fi
 .RE
 .PP
@@ -133,7 +133,7 @@ Multiple queries:
 .PP
 .RS
 .nf
-hydequery config.conf -Q 'general:gaps_in' -Q 'general:gaps_out'
+hyq config.conf -Q 'general:gaps_in' -Q 'general:gaps_out'
 .fi
 .RE
 .SS "Type and Regex Filtering"
@@ -141,7 +141,7 @@ Query with type filter:
 .PP
 .RS
 .nf
-hydequery config.conf -Q 'general:border_size[INT]'
+hyq config.conf -Q 'general:border_size[INT]'
 .fi
 .RE
 .PP
@@ -149,7 +149,7 @@ Query with type and regex filter:
 .PP
 .RS
 .nf
-hydequery config.conf -Q 'decoration:rounding[INT][^[0-9]+$]'
+hyq config.conf -Q 'decoration:rounding[INT][^[0-9]+$]'
 .fi
 .RE
 .SS "Export Formats"
@@ -157,7 +157,7 @@ JSON export:
 .PP
 .RS
 .nf
-hydequery config.conf -Q 'general:border_size' --export json
+hyq config.conf -Q 'general:border_size' --export json
 .fi
 .RE
 .PP
@@ -165,7 +165,7 @@ Environment variable export:
 .PP
 .RS
 .nf
-hydequery config.conf -Q '$terminal' --export env
+hyq config.conf -Q '$terminal' --export env
 .fi
 .RE
 .SS "Schema Operations"
@@ -173,7 +173,7 @@ Fetch and cache schema:
 .PP
 .RS
 .nf
-hydequery --fetch-schema
+hyq --fetch-schema
 .fi
 .RE
 .PP
@@ -181,7 +181,7 @@ Use cached schema:
 .PP
 .RS
 .nf
-hydequery config.conf -Q 'general:layout' --schema auto
+hyq config.conf -Q 'general:layout' --schema auto
 .fi
 .RE
 .PP
@@ -189,7 +189,7 @@ Get all default keys:
 .PP
 .RS
 .nf
-hydequery config.conf --schema auto --get-defaults
+hyq config.conf --schema auto --get-defaults
 .fi
 .RE
 .SS "Advanced Usage"
@@ -197,7 +197,7 @@ Follow source directives:
 .PP
 .RS
 .nf
-hydequery config.conf -Q 'colors:background' -s
+hyq config.conf -Q 'colors:background' -s
 .fi
 .RE
 .PP
@@ -205,12 +205,12 @@ Custom delimiter for scripting:
 .PP
 .RS
 .nf
-hydequery config.conf -Q 'a' -Q 'b' -D ','
+hyq config.conf -Q 'a' -Q 'b' -D ','
 .fi
 .RE
 .SH FILES
 .TP
-.I ~/.cache/hydequery/hyprland.json
+.I ~/.cache/hyprquery/hyprland.json
 Cached schema file downloaded by \fB\-\-fetch\-schema\fR.
 .TP
 .I ~/.config/hypr/hyprland.conf

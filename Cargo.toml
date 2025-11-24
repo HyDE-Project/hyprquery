@@ -1,5 +1,5 @@
 [package]
-name = "hydequery"
+name = "hyprquery"
 version = "0.2.0"
 edition = "2024"
 authors = ["RAprogramm <andrey.rozanov.vl@gmail.com>"]
@@ -8,6 +8,10 @@ license = "GPL-3.0"
 repository = "https://github.com/HyDE-Project/hyprquery"
 keywords = ["hyprland", "configuration", "query", "cli"]
 categories = ["command-line-utilities", "config"]
+
+[[bin]]
+name = "hyq"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

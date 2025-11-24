@@ -5,12 +5,12 @@
 //!
 //! # Cache Location
 //!
-//! The schema is cached in `~/.cache/hydequery/hyprland.json`.
+//! The schema is cached in `~/.cache/hyprquery/hyprland.json`.
 //!
 //! # Example
 //!
 //! ```no_run
-//! use hydequery::fetch;
+//! use hyprquery::fetch;
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Fetch and cache the schema
@@ -34,7 +34,7 @@ const SCHEMA_URL: &str =
 const SCHEMA_FILENAME: &str = "hyprland.json";
 
 /// Application cache directory name.
-const CACHE_DIR_NAME: &str = "hydequery";
+const CACHE_DIR_NAME: &str = "hyprquery";
 
 /// Returns the path to the cache directory.
 ///
@@ -42,7 +42,7 @@ const CACHE_DIR_NAME: &str = "hydequery";
 ///
 /// # Returns
 ///
-/// Path to `~/.cache/hydequery/`
+/// Path to `~/.cache/hyprquery/`
 ///
 /// # Errors
 ///
@@ -64,7 +64,7 @@ pub fn get_cache_dir() -> Result<PathBuf, AppError> {
 ///
 /// # Returns
 ///
-/// Path to `~/.cache/hydequery/hyprland.json`
+/// Path to `~/.cache/hyprquery/hyprland.json`
 ///
 /// # Errors
 ///
@@ -103,7 +103,7 @@ pub fn has_cached_schema() -> bool {
 /// # Example
 ///
 /// ```no_run
-/// use hydequery::fetch;
+/// use hyprquery::fetch;
 ///
 /// fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let path = fetch::fetch_schema()?;
@@ -170,7 +170,7 @@ mod tests {
         let result = get_cache_dir();
         assert!(result.is_ok());
         let path = result.unwrap();
-        assert!(path.to_string_lossy().contains("hydequery"));
+        assert!(path.to_string_lossy().contains("hyprquery"));
     }
 
     #[test]
@@ -238,7 +238,7 @@ mod tests {
 
     #[test]
     fn test_cache_dir_name_constant() {
-        assert_eq!(CACHE_DIR_NAME, "hydequery");
+        assert_eq!(CACHE_DIR_NAME, "hyprquery");
     }
 
     #[test]

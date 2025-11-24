@@ -1,4 +1,4 @@
-//! Benchmarks for hydequery operations.
+//! Benchmarks for hyprquery operations.
 //!
 //! Run with: `cargo bench`
 //! Results are saved to `target/criterion/`
@@ -6,7 +6,7 @@
 use std::{fs, hint::black_box, io::Write};
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
-use hydequery::{cli::Args, query::parse_query_inputs};
+use hyprquery::{cli::Args, query::parse_query_inputs};
 
 /// Sample HyDE-style configuration for benchmarking.
 const BENCH_CONFIG: &str = r#"
@@ -73,7 +73,7 @@ misc {
 
 /// Create a temporary config file for benchmarking.
 fn create_bench_config() -> String {
-    let temp_dir = std::env::temp_dir().join("hydequery_bench");
+    let temp_dir = std::env::temp_dir().join("hyprquery_bench");
     let _ = fs::create_dir_all(&temp_dir);
     let path = temp_dir.join("bench.conf");
     let mut file = fs::File::create(&path).expect("Failed to create bench config");
@@ -157,14 +157,14 @@ fn bench_full_execution(c: &mut Criterion) {
     group.bench_function("single_static_key", |b| {
         let args = make_bench_args(&config_path, vec!["general:border_size"]);
         b.iter(|| {
-            let _ = hydequery::app::run_with_args(black_box(args.clone()));
+            let _ = hyprquery::app::run_with_args(black_box(args.clone()));
         })
     });
 
     group.bench_function("single_with_type", |b| {
         let args = make_bench_args(&config_path, vec!["general:border_size[INT]"]);
         b.iter(|| {
-            let _ = hydequery::app::run_with_args(black_box(args.clone()));
+            let _ = hyprquery::app::run_with_args(black_box(args.clone()));
         })
     });
 
@@ -178,7 +178,7 @@ fn bench_full_execution(c: &mut Criterion) {
             ]
         );
         b.iter(|| {
-            let _ = hydequery::app::run_with_args(black_box(args.clone()));
+            let _ = hyprquery::app::run_with_args(black_box(args.clone()));
         })
     });
 

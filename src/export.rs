@@ -1,4 +1,4 @@
-//! Output formatting and export functions for hydequery.
+//! Output formatting and export functions for hyprquery.
 //!
 //! This module provides functions to format query results in various formats:
 //! - Plain text with configurable delimiter
