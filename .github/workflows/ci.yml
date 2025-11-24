@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -132,8 +131,8 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: hydequery-linux-x86_64
-          path: target/release/hydequery
+          name: hyq-linux-x86_64
+          path: target/release/hyq
           retention-days: 7
 
   audit:
