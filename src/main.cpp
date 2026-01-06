@@ -19,54 +19,34 @@ void prepareConfig(const std::vector<hyprquery::QueryInput> &queries,
                    std::string &configFilePath,
                    Hyprlang::SConfigOptions &options,
                    std::vector<std::string> &dynamicVars, bool debugLogging) {
-  std::hash<std::string> hasher;
-  bool variableSearch = false;
+
   for (const auto &q : queries) {
     if (q.isDynamicVariable) {
-      variableSearch = true;
-      break;
-    }
-  }
-  std::string configStream;
-  if (variableSearch) {
-    if (debugLogging)
-      spdlog::debug("[variable-search] Enabled");
-    std::ifstream src(configFilePath);
-    std::ostringstream dst;
-    dst << src.rdbuf();
-    for (size_t i = 0; i < queries.size(); ++i) {
-      if (queries[i].isDynamicVariable) {
-        std::string dynKey =
-            "Dynamic_" + std::to_string(hasher(queries[i].query));
-        std::string dynLine = "\n" + dynKey + "=" + queries[i].query + "\n";
-        dst << dynLine;
+      std::string envVarName = q.query;
+      if (!envVarName.empty() && envVarName[0] == '$') {
+        envVarName = envVarName.substr(1);
+      }
+
+      if (setenv(envVarName.c_str(), "", 1) == 0) {
         if (debugLogging)
-          spdlog::debug(std::string("[variable-search] Injecting line: ") +
-                        dynLine.substr(1, dynLine.size() - 2));
+          spdlog::debug(std::string("[env-export] Pre-exported (blank) ") +
+                        envVarName);
       }
     }
-    src.close();
-    configStream = dst.str();
-    configFilePath = configStream;
-    options.pathIsStream = true;
   }
+
   dynamicVars.resize(queries.size());
 
   pConfig = new Hyprlang::CConfig(configFilePath.c_str(), options);
+
   for (size_t i = 0; i < queries.size(); ++i) {
-    if (queries[i].isDynamicVariable) {
-      std::string dynKey =
-          "Dynamic_" + std::to_string(hasher(queries[i].query));
-      dynamicVars[i] = dynKey;
-      pConfig->addConfigValue(dynKey.c_str(), (Hyprlang::STRING) "");
-      if (debugLogging)
-        spdlog::debug(std::string("[variable-search] Mapping query '") +
-                      queries[i].query + "' to injected key '" + dynKey + "'");
-    } else {
-      dynamicVars[i] = queries[i].query;
+    dynamicVars[i] = queries[i].query;
+
+    if (!queries[i].isDynamicVariable) {
       pConfig->addConfigValue(queries[i].query.c_str(), (Hyprlang::STRING) "");
     }
   }
+
   pConfig->commence();
 }
 
@@ -77,22 +57,17 @@ executeQueries(const std::vector<hyprquery::QueryInput> &queries,
   for (size_t i = 0; i < queries.size(); ++i) {
     hyprquery::QueryResult result;
     result.key = queries[i].query;
-    std::string lookupKey =
-        queries[i].isDynamicVariable ? dynamicVars[i] : queries[i].query;
-    if (debugLogging)
-      spdlog::debug(std::string("[variable-search] Lookup key for query '") +
-                    queries[i].query + "' is '" + lookupKey + "'");
-    if (debugLogging && queries[i].isDynamicVariable) {
-      spdlog::debug(std::string("[variable-search] Query '") +
-                    queries[i].query + "' lookup key: '" + lookupKey + "'");
+
+    std::string lookupKey = queries[i].query;
+
+    if (queries[i].isDynamicVariable) {
+      lookupKey = dynamicVars[i];
     }
+
     std::any value = pConfig->getConfigValue(lookupKey.c_str());
     result.value = hyprquery::ConfigUtils::convertValueToString(value);
     result.type = hyprquery::ConfigUtils::getValueTypeName(value);
-    if (queries[i].isDynamicVariable && result.value == queries[i].query) {
-      result.value = "";
-      result.type = "NULL";
-    }
+
     if (!queries[i].expectedType.empty()) {
       if (hyprquery::normalizeType(result.type) !=
           hyprquery::normalizeType(queries[i].expectedType)) {
