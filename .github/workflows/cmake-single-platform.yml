@@ -48,15 +48,6 @@ jobs:
       - name: Install pixman
         run: sudo apt-get install -y libpixman-1-dev
 
-      - name: Build and install hyprutils
-        run: |
-          git clone --depth=1 https://github.com/hyprwm/hyprutils.git
-          cd hyprutils
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
-            -DCMAKE_C_COMPILER=/usr/bin/gcc-13 -DCMAKE_CXX_COMPILER=/usr/bin/g++-13
-          cmake --build build --config Release --target hyprutils -j$(nproc)
-          sudo cmake --install build
-
       - name: Build and install hyprlang
         run: |
           git clone --depth=1 https://github.com/hyprwm/hyprlang.git
