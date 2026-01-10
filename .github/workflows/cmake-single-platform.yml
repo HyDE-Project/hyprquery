@@ -83,7 +83,8 @@ jobs:
       - name: Package (tar.gz)
         if: success()
         run: |
-          cmake --install build --prefix package
+          mkdir -p package/bin
+          cp -v bin/* package/bin/ || true
           tar czf hyprquery-${{ github.ref_name || 'dev' }}-linux-x86_64.tar.gz -C package .
 
       - name: Test
