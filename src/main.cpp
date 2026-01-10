@@ -27,7 +27,8 @@ void prepareConfig(const std::vector<hyprquery::QueryInput> &queries,
         envVarName = envVarName.substr(1);
       }
 
-      if (setenv(envVarName.c_str(), "", 1) == 0) {
+      if (!getenv(envVarName.c_str()) &&
+          setenv(envVarName.c_str(), "", 0) == 0) {
         if (debugLogging)
           spdlog::debug(std::string("[env-export] Pre-exported (blank) ") +
                         envVarName);
@@ -40,9 +41,12 @@ void prepareConfig(const std::vector<hyprquery::QueryInput> &queries,
   pConfig = new Hyprlang::CConfig(configFilePath.c_str(), options);
 
   for (size_t i = 0; i < queries.size(); ++i) {
-    dynamicVars[i] = queries[i].query;
+    if (queries[i].isDynamicVariable) {
 
-    if (!queries[i].isDynamicVariable) {
+      dynamicVars[i] = "__hyprquery_capture_" + std::to_string(i);
+      pConfig->addConfigValue(dynamicVars[i].c_str(), (Hyprlang::STRING) "");
+    } else {
+      dynamicVars[i] = queries[i].query;
       pConfig->addConfigValue(queries[i].query.c_str(), (Hyprlang::STRING) "");
     }
   }
@@ -61,7 +65,17 @@ executeQueries(const std::vector<hyprquery::QueryInput> &queries,
     std::string lookupKey = queries[i].query;
 
     if (queries[i].isDynamicVariable) {
-      lookupKey = dynamicVars[i];
+      const std::string varName = queries[i].query.substr(1);
+      const std::string captureKey = dynamicVars[i];
+
+      const std::string line = captureKey + " = $" + varName;
+      const auto dynResult = pConfig->parseDynamic(line.c_str());
+      if (debugLogging && dynResult.error) {
+        spdlog::debug(std::string("[capture] Failed to capture $") + varName +
+                      ": " + dynResult.getError());
+      }
+
+      lookupKey = captureKey;
     }
 
     std::any value = pConfig->getConfigValue(lookupKey.c_str());
