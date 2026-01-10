@@ -90,95 +90,25 @@ jobs:
         working-directory: build
         run: ctest --output-on-failure -C ${{ env.BUILD_TYPE }}
 
-      - name: Upload build artifact (x86_64 tarball)
+      - name: Upload build artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: hyprquery-x86_64
-          path: hyprquery-${{ github.ref_name || 'dev' }}-linux-x86_64.tar.gz
+          name: build-artifacts
+          path: build/
 
-  build-aarch64:
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    container:
-      image: arm64v8/ubuntu:24.04
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install deps (arm64)
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config \
-            clang-17 libc++-dev libc++abi-dev libspdlog-dev libpixman-1-dev
-
-      - name: Build and install hyprutils (arm64)
-        run: |
-          git clone --depth=1 https://github.com/hyprwm/hyprutils.git
-          cd hyprutils
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
-            -DCMAKE_C_COMPILER=/usr/bin/clang-17 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-17 \
-            -DCMAKE_CXX_FLAGS='-stdlib=libc++' -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++'
-          cmake --build build --config Release --target all -j$(nproc)
-          cmake --install build --prefix /usr
-
-      - name: Build and install hyprlang (arm64)
-        run: |
-          git clone --depth=1 https://github.com/hyprwm/hyprlang.git
-          cd hyprlang
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
-            -DHYPRLANG_BUILD_TESTS=OFF -DHYPRLANG_BUILD_FUZZERS=OFF \
-            -DCMAKE_C_COMPILER=/usr/bin/clang-17 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-17 \
-            -DCMAKE_CXX_FLAGS='-stdlib=libc++' -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++'
-          cmake --build build -j$(nproc)
-          cmake --install build --prefix /usr
-
-      - name: Configure & build hyprquery (arm64)
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_HYPRLANG=ON \
-            -DCMAKE_C_COMPILER=/usr/bin/clang-17 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-17 \
-            -DCMAKE_CXX_FLAGS='-stdlib=libc++' -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++'
-          cmake --build build -j$(nproc)
-
-      - name: Package (aarch64)
-        if: success()
-        run: |
-          cmake --install build --prefix package
-          tar czf hyprquery-${{ github.ref_name || 'dev' }}-linux-aarch64.tar.gz -C package .
-
-      - name: Upload arm artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: hyprquery-aarch64
-          path: hyprquery-${{ github.ref_name || 'dev' }}-linux-aarch64.tar.gz
-
-  release:
-    needs: [build, build-aarch64]
-    runs-on: ubuntu-24.04
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download x86 artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: hyprquery-x86_64
-
-      - name: Download arm artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: hyprquery-aarch64
-
-      - name: Create GitHub Release and upload assets
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
           files: |
             hyprquery-${{ github.ref_name }}-linux-x86_64.tar.gz
-            hyprquery-${{ github.ref_name }}-linux-aarch64.tar.gz
-
-
