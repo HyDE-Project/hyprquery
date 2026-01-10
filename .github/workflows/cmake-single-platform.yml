@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -29,13 +29,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-${{ env.BUILD_TYPE }}-
 
-      - name: Install GCC 13
+      - name: Install GCC 13 and set compilers
         run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update
-          sudo apt-get install -y gcc-13 g++-13
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 13
+          sudo apt-get install -y gcc-13 g++-13 pkg-config build-essential ninja-build
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13 || true
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 13 || true
+          echo "C and C++ compilers set to gcc-13/g++-13"
+        env:
+          DEBIAN_FRONTEND: noninteractive
 
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v2
@@ -50,18 +52,38 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/hyprwm/hyprutils.git
           cd hyprutils
-          cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -S . -B build
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_C_COMPILER=/usr/bin/gcc-13 -DCMAKE_CXX_COMPILER=/usr/bin/g++-13
           cmake --build build --config Release --target hyprutils -j$(nproc)
           sudo cmake --install build
 
-      - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-
-      - name: Patch hyprlang to remove <print> include and std::print usage
+      - name: Build and install hyprlang
         run: |
-          find build/_deps/hyprlang-src/ -type f -name '*.hpp' -exec sed -i 's|#include <print>|// #include <print>|' {} +
-          find build/_deps/hyprlang-src/ -type f -name '*.hpp' -exec sed -i 's|std::print|// std::print|' {} +
-          find build/_deps/hyprlang-src/ -type f -name '*.cpp' -exec sed -i 's|std::print|// std::print|' {} +
+          git clone --depth=1 https://github.com/hyprwm/hyprlang.git
+          cd hyprlang
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DHYPRLANG_BUILD_TESTS=OFF -DHYPRLANG_BUILD_FUZZERS=OFF \
+            -DCMAKE_C_COMPILER=/usr/bin/gcc-13 -DCMAKE_CXX_COMPILER=/usr/bin/g++-13
+          cmake --build build -j$(nproc)
+          sudo cmake --install build
+
+      - name: Configure CMake (use system hyprlang)
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DUSE_SYSTEM_HYPRLANG=ON \
+            -DCMAKE_C_COMPILER=/usr/bin/gcc-13 -DCMAKE_CXX_COMPILER=/usr/bin/g++-13
+
+      - name: (Optional) Patch hyprlang std::print usage (fallback)
+        if: ${{ always() }}
+        run: |
+          # If FetchContent-built hyprlang remains in build/_deps, remove std::print to avoid libstdc++ gaps
+          if [ -d build/_deps/hyprlang-src ]; then
+            find build/_deps/hyprlang-src/ -type f -name '*.hpp' -exec sed -i 's|#include <print>|// #include <print>|' {} + || true
+            find build/_deps/hyprlang-src/ -type f -name '*.hpp' -exec sed -i 's|std::print|// std::print|' {} + || true
+            find build/_deps/hyprlang-src/ -type f -name '*.cpp' -exec sed -i 's|std::print|// std::print|' {} + || true
+          else
+            echo "No FetchContent hyprlang source dir found; skipping patch."
+          fi
 
       - name: Build
         run: cmake --build build --config ${{ env.BUILD_TYPE }} -- -j$(nproc)
