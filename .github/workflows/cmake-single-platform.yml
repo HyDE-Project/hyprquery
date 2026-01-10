@@ -29,13 +29,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-${{ env.BUILD_TYPE }}-
 
-      - name: Install GCC 13 and set compilers
+      - name: Install toolchain (GCC13 + Clang17 + libc++)
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-13 g++-13 pkg-config build-essential ninja-build
+          sudo apt-get install -y gcc-13 g++-13 clang-17 libc++-dev libc++abi-dev pkg-config build-essential ninja-build
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13 || true
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 13 || true
-          echo "C and C++ compilers set to gcc-13/g++-13"
+          echo "Installed gcc-13 and clang-17 (libc++ available)"
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -50,11 +50,21 @@ jobs:
 
       - name: Build and install hyprlang
         run: |
+          # Build and install hyprutils first (required by hyprlang)
+          git clone --depth=1 https://github.com/hyprwm/hyprutils.git
+          cd hyprutils
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_C_COMPILER=/usr/bin/clang-17 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-17 \
+            -DCMAKE_CXX_FLAGS='-stdlib=libc++' -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++'
+          cmake --build build --config Release --target all -j$(nproc)
+          sudo cmake --install build
+          cd ..
           git clone --depth=1 https://github.com/hyprwm/hyprlang.git
           cd hyprlang
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
             -DHYPRLANG_BUILD_TESTS=OFF -DHYPRLANG_BUILD_FUZZERS=OFF \
-            -DCMAKE_C_COMPILER=/usr/bin/gcc-13 -DCMAKE_CXX_COMPILER=/usr/bin/g++-13
+            -DCMAKE_C_COMPILER=/usr/bin/clang-17 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-17 \
+            -DCMAKE_CXX_FLAGS='-stdlib=libc++' -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++'
           cmake --build build -j$(nproc)
           sudo cmake --install build
 
@@ -62,19 +72,10 @@ jobs:
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
             -DUSE_SYSTEM_HYPRLANG=ON \
-            -DCMAKE_C_COMPILER=/usr/bin/gcc-13 -DCMAKE_CXX_COMPILER=/usr/bin/g++-13
+            -DCMAKE_C_COMPILER=/usr/bin/clang-17 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-17 \
+            -DCMAKE_CXX_FLAGS='-stdlib=libc++' -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++'
 
-      - name: (Optional) Patch hyprlang std::print usage (fallback)
-        if: ${{ always() }}
-        run: |
-          # If FetchContent-built hyprlang remains in build/_deps, remove std::print to avoid libstdc++ gaps
-          if [ -d build/_deps/hyprlang-src ]; then
-            find build/_deps/hyprlang-src/ -type f -name '*.hpp' -exec sed -i 's|#include <print>|// #include <print>|' {} + || true
-            find build/_deps/hyprlang-src/ -type f -name '*.hpp' -exec sed -i 's|std::print|// std::print|' {} + || true
-            find build/_deps/hyprlang-src/ -type f -name '*.cpp' -exec sed -i 's|std::print|// std::print|' {} + || true
-          else
-            echo "No FetchContent hyprlang source dir found; skipping patch."
-          fi
+      # No source-patching: using Clang17 + libc++ to support C++23 <print>
 
       - name: Build
         run: cmake --build build --config ${{ env.BUILD_TYPE }} -- -j$(nproc)
