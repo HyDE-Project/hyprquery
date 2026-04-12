@@ -15,16 +15,26 @@ find_package(PkgConfig REQUIRED)
 
 include(FetchContent)
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
-set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG        v1.14.1
-)
-FetchContent_MakeAvailable(spdlog)
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+option(HYPRQUERY_DISTRO_BUILD "Use system-provided dependencies for distro packaging" OFF)
+
+if(HYPRQUERY_DISTRO_BUILD)
+    set(USE_SYSTEM_HYPRLANG ON CACHE BOOL "Use system-installed hyprlang instead of FetchContent" FORCE)
+endif()
+
+if(HYPRQUERY_DISTRO_BUILD)
+    find_package(spdlog REQUIRED)
+else()
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG        v1.14.1
+    )
+    FetchContent_MakeAvailable(spdlog)
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+endif()
 
 option(USE_SYSTEM_HYPRLANG "Use system-installed hyprlang instead of FetchContent" OFF)
 
@@ -42,24 +52,32 @@ else()
     FetchContent_MakeAvailable(hyprlang)
 endif()
 
-find_package(CLI11 QUIET)
-if (NOT CLI11_FOUND)
-    FetchContent_Declare(
-        CLI11
-        GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
-        GIT_TAG        v2.5.0
-    )
-    FetchContent_MakeAvailable(CLI11)
+if(HYPRQUERY_DISTRO_BUILD)
+    find_package(CLI11 REQUIRED)
+else()
+    find_package(CLI11 QUIET)
+    if (NOT CLI11_FOUND)
+        FetchContent_Declare(
+            CLI11
+            GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+            GIT_TAG        v2.5.0
+        )
+        FetchContent_MakeAvailable(CLI11)
+    endif()
 endif()
 
-find_package(nlohmann_json QUIET)
-if (NOT nlohmann_json_FOUND)
-    FetchContent_Declare(
-        nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG        v3.12.0
-    )
-    FetchContent_MakeAvailable(nlohmann_json)
+if(HYPRQUERY_DISTRO_BUILD)
+    find_package(nlohmann_json REQUIRED)
+else()
+    find_package(nlohmann_json QUIET)
+    if (NOT nlohmann_json_FOUND)
+        FetchContent_Declare(
+            nlohmann_json
+            GIT_REPOSITORY https://github.com/nlohmann/json.git
+            GIT_TAG        v3.12.0
+        )
+        FetchContent_MakeAvailable(nlohmann_json)
+    endif()
 endif()
 
 set(SOURCES

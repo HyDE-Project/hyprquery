@@ -45,6 +45,7 @@ sudo make install
 
 - `CMAKE_EXPORT_COMPILE_COMMANDS=ON`: Generate compile_commands.json for IDE integration
 - `CMAKE_BUILD_TYPE=Release|Debug`: Build in release or debug mode
+- `HYPRQUERY_DISTRO_BUILD=ON`: Use system-provided dependencies and disable FetchContent fallbacks
 
 Example:
 
@@ -54,6 +55,9 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
 
 # Build in release mode
 cmake -DCMAKE_BUILD_TYPE=Release ..
+
+# Build for distro packaging (no dependency downloads)
+cmake -DCMAKE_BUILD_TYPE=None -DHYPRQUERY_DISTRO_BUILD=ON -DUSE_SYSTEM_HYPRLANG=ON ..
 ```
 
 ### IDE Setup
@@ -86,8 +90,19 @@ Debian/Ubuntu:
 
 Arch Linux:
 
+```bash
+cd Distro/arch/hyprquery
+makepkg -si
 ```
-# Coming soon
+
+The Arch package enables distro mode during configure:
+
+```bash
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=None \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DHYPRQUERY_DISTRO_BUILD=ON \
+  -DUSE_SYSTEM_HYPRLANG=ON
 ```
 
 ## Usage
