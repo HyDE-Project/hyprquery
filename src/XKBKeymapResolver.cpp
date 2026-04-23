@@ -70,6 +70,23 @@ uint32_t XKBKeymapResolver::resolveKeycode(const std::string &key) const {
   if (it != m_keycodeCache.end())
     return it->second;
 
+  if (key.size() > 5 && key.substr(0, 5) == "code:") {
+    std::string codeStr = key.substr(5);
+
+    size_t start = codeStr.find_first_not_of(" \t");
+    if (start != std::string::npos)
+      codeStr = codeStr.substr(start);
+
+    if (!codeStr.empty() &&
+        codeStr.find_first_not_of("0123456789") == std::string::npos) {
+      uint32_t kc = static_cast<uint32_t>(std::stoul(codeStr));
+      m_keycodeCache[key] = kc;
+      return kc;
+    }
+    m_keycodeCache[key] = 0;
+    return 0;
+  }
+
   xkb_keysym_t sym =
       xkb_keysym_from_name(key.c_str(), XKB_KEYSYM_CASE_INSENSITIVE);
   if (sym == XKB_KEY_NoSymbol) {

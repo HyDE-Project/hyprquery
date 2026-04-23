@@ -49,9 +49,16 @@ Hyprlang::CParseResult KeybindCollector::handleUnbind(const char *command,
       binds.erase(std::remove_if(binds.begin(), binds.end(),
                                  [&key, wildcard](const BindEntry &bind) {
                                    if (bind.modmask != key.modmask ||
-                                       bind.keycode != key.keycode ||
                                        bind.submap != key.submap)
                                      return false;
+
+                                   if (key.keycode != 0 && bind.keycode != 0) {
+                                     if (bind.keycode != key.keycode)
+                                       return false;
+                                   } else {
+                                     if (bind.key != key.key)
+                                       return false;
+                                   }
                                    return wildcard || bind.flags == key.flags;
                                  }),
                   binds.end());
@@ -128,20 +135,13 @@ struct FlagMapping {
 };
 
 static const std::vector<FlagMapping> FLAG_MAP = {
-    {'l', &BindEntry::locked},
-    {'r', &BindEntry::release},
-    {'c', &BindEntry::click},
-    {'g', &BindEntry::drag},
-    {'o', &BindEntry::longPress},
-    {'e', &BindEntry::repeat},
-    {'n', &BindEntry::non_consuming},
-    {'m', &BindEntry::mouse},
-    {'t', &BindEntry::transparent},
-    {'i', &BindEntry::ignore_mods},
-    {'s', &BindEntry::separate},
-    {'d', &BindEntry::has_description},
-    {'p', &BindEntry::bypass},
-    {'u', &BindEntry::submap_universal},
+    {'l', &BindEntry::locked},        {'r', &BindEntry::release},
+    {'c', &BindEntry::click},         {'g', &BindEntry::drag},
+    {'o', &BindEntry::longPress},     {'e', &BindEntry::repeat},
+    {'n', &BindEntry::non_consuming}, {'m', &BindEntry::mouse},
+    {'t', &BindEntry::transparent},   {'i', &BindEntry::ignore_mods},
+    {'s', &BindEntry::separate},      {'d', &BindEntry::has_description},
+    {'p', &BindEntry::bypass},        {'u', &BindEntry::submap_universal},
     {'k', &BindEntry::per_device},
 };
 
@@ -157,11 +157,12 @@ void KeybindCollector::resolveKeycodes(BindEntry &entry,
   int modmask = 0;
   int keycode = 0;
 
+  std::string keyStr = parts.size() > 1 ? parts[1] : "";
+
   if (resolver && resolver->valid()) {
     if (!parts.empty()) {
       modmask = resolver->resolveHyprlandModMask(parts[0]);
     }
-    std::string keyStr = parts.size() > 1 ? parts[1] : "";
     keycode = resolver->resolveKeycode(keyStr);
     entry.catch_all = (keyStr == "catchall");
   } else {
@@ -172,7 +173,12 @@ void KeybindCollector::resolveKeycodes(BindEntry &entry,
   entry.keycode = keycode;
   entry.submap = "";
   entry.modifiers = !parts.empty() ? parts[0] : "";
-  entry.key = parts.size() > 1 ? parts[1] : "";
+
+  if (keyStr.size() > 5 && keyStr.substr(0, 5) == "code:" && keycode != 0) {
+    entry.key = "";
+  } else {
+    entry.key = keyStr;
+  }
 }
 
 void KeybindCollector::parseDevices(BindEntry &entry,
@@ -196,8 +202,8 @@ void KeybindCollector::parseDevices(BindEntry &entry,
       break;
 
     size_t end = start;
-    while (end < devicesField.size() &&
-           devicesField[end] != ' ' && devicesField[end] != '\t')
+    while (end < devicesField.size() && devicesField[end] != ' ' &&
+           devicesField[end] != '\t')
       end++;
 
     std::string dev = devicesField.substr(start, end - start);
