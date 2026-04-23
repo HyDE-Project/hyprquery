@@ -16,7 +16,6 @@ A command-line utility for querying configuration values from Hyprland and hyprl
 
 - C++23 compatible compiler
 - CMake 3.19+
-- spdlog
 - nlohmann_json
 - CLI11
 - hyprlang (automatically downloaded and built during compilation)

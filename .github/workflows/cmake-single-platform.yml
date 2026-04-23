@@ -49,9 +49,6 @@ jobs:
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v2
 
-      - name: Install spdlog
-        run: sudo apt-get install -y libspdlog-dev
-
       - name: Install pixman
         run: sudo apt-get install -y libpixman-1-dev
 
