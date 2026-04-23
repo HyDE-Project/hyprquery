@@ -81,11 +81,7 @@ set(SOURCES
 
 list(APPEND SOURCES src/XKBKeymapResolver.cpp)
 add_executable(hyq ${SOURCES})
-if(USE_SYSTEM_HYPRLANG)
-    target_link_libraries(hyq PRIVATE hyprlang::hyprlang ${XKBCOMMON_LIBRARIES})
-else()
-    target_link_libraries(hyq PRIVATE hyprlang ${XKBCOMMON_LIBRARIES})
-endif()
+target_link_libraries(hyq PRIVATE ${XKBCOMMON_LIBRARIES})
 target_include_directories(hyq PRIVATE ${XKBCOMMON_INCLUDE_DIRS})
 target_compile_options(hyq PRIVATE ${XKBCOMMON_CFLAGS_OTHER})
 
