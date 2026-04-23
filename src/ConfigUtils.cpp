@@ -1,9 +1,9 @@
 #include "ConfigUtils.hpp"
+#include "Logger.hpp"
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <regex>
-#include <spdlog/spdlog.h>
 #include <wordexp.h>
 
 namespace hyprquery {
@@ -55,7 +55,7 @@ void ConfigUtils::addConfigValuesFromSchema(Hyprlang::CConfig &config,
                                             const std::string &schemaFilePath) {
   std::ifstream schemaFile(schemaFilePath);
   if (!schemaFile.is_open()) {
-    spdlog::error("Failed to open schema file: {}", schemaFilePath);
+    Logger::error("Failed to open schema file: {}", schemaFilePath);
     return;
   }
 
@@ -63,19 +63,19 @@ void ConfigUtils::addConfigValuesFromSchema(Hyprlang::CConfig &config,
   try {
     schemaFile >> schemaJson;
   } catch (const std::exception &e) {
-    spdlog::error("Failed to parse schema JSON: {}", e.what());
+    Logger::error("Failed to parse schema JSON: {}", e.what());
     return;
   }
 
   if (!schemaJson.contains("hyprlang_schema")) {
-    spdlog::error("Invalid schema format: missing 'hyprlang_schema' key");
+    Logger::error("Invalid schema format: missing 'hyprlang_schema' key");
     return;
   }
 
   for (const auto &option : schemaJson["hyprlang_schema"]) {
     if (!option.contains("value") || !option.contains("type") ||
         !option.contains("data")) {
-      spdlog::error("Invalid schema option format");
+      Logger::error("Invalid schema option format");
       continue;
     }
 

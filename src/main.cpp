@@ -1,48 +1,43 @@
 #include "ConfigUtils.hpp"
 #include "ExportEnv.hpp"
 #include "ExportJson.hpp"
+#include "KeybindHandler.hpp"
+#include "Logger.hpp"
 #include "SourceHandler.hpp"
+
 #include <CLI/CLI.hpp>
 #include <filesystem>
 #include <functional>
 #include <hyprlang.hpp>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <regex>
-#include <spdlog/spdlog.h>
-
-using hyprquery::exportEnv;
-using hyprquery::exportJson;
 
 static Hyprlang::CConfig *pConfig = nullptr;
 
 void prepareConfig(const std::vector<hyprquery::QueryInput> &queries,
                    std::string &configFilePath,
                    Hyprlang::SConfigOptions &options,
-                   std::vector<std::string> &dynamicVars, bool debugLogging) {
-
+                   std::vector<std::string> &dynamicVars) {
   for (const auto &q : queries) {
     if (q.isDynamicVariable) {
       std::string envVarName = q.query;
       if (!envVarName.empty() && envVarName[0] == '$') {
         envVarName = envVarName.substr(1);
       }
-
       if (!getenv(envVarName.c_str()) &&
           setenv(envVarName.c_str(), "", 0) == 0) {
-        if (debugLogging)
-          spdlog::debug(std::string("[env-export] Pre-exported (blank) ") +
-                        envVarName);
+        hyprquery::Logger::debug("[env-export] Pre-exported (blank) {}",
+                                 envVarName);
       }
     }
   }
 
   dynamicVars.resize(queries.size());
-
   pConfig = new Hyprlang::CConfig(configFilePath.c_str(), options);
 
   for (size_t i = 0; i < queries.size(); ++i) {
     if (queries[i].isDynamicVariable) {
-
       dynamicVars[i] = "__hyprquery_capture_" + std::to_string(i);
       pConfig->addConfigValue(dynamicVars[i].c_str(), (Hyprlang::STRING) "");
     } else {
@@ -56,8 +51,9 @@ void prepareConfig(const std::vector<hyprquery::QueryInput> &queries,
 
 std::vector<hyprquery::QueryResult>
 executeQueries(const std::vector<hyprquery::QueryInput> &queries,
-               const std::vector<std::string> &dynamicVars, bool debugLogging) {
+               const std::vector<std::string> &dynamicVars) {
   std::vector<hyprquery::QueryResult> results;
+  results.reserve(queries.size());
   for (size_t i = 0; i < queries.size(); ++i) {
     hyprquery::QueryResult result;
     result.key = queries[i].query;
@@ -70,9 +66,9 @@ executeQueries(const std::vector<hyprquery::QueryInput> &queries,
 
       const std::string line = captureKey + " = $" + varName;
       const auto dynResult = pConfig->parseDynamic(line.c_str());
-      if (debugLogging && dynResult.error) {
-        spdlog::debug(std::string("[capture] Failed to capture $") + varName +
-                      ": " + dynResult.getError());
+      if (dynResult.error) {
+        hyprquery::Logger::debug("[capture] Failed to capture ${}: {}", varName,
+                                 dynResult.getError());
       }
 
       lookupKey = captureKey;
@@ -113,7 +109,6 @@ void outputResults(const std::vector<hyprquery::QueryResult> &results,
   if (exportFormat == "json") {
     hyprquery::exportJson(results);
   } else if (exportFormat == "env") {
-
     std::vector<hyprquery::QueryInput> patchedQueries = queries;
     for (auto &q : patchedQueries) {
       if (!q.query.empty() && q.query[0] == '$') {
@@ -131,23 +126,15 @@ void outputResults(const std::vector<hyprquery::QueryResult> &results,
   }
 }
 
-int main(int argc, char **argv) {
-  CLI::App app{"hyprquery - A configuration parser for hypr* config files"};
-  std::vector<std::string> rawQueries;
-  std::string configFilePath;
-  std::string schemaFilePath;
-  bool allowMissing = false;
-  bool getDefaultKeys = false;
-  bool strictMode = false;
-  bool followSource = false;
-  bool debugLogging = false;
-  std::string delimiter = "\n";
-  std::string exportFormat;
+void cliOptions(CLI::App &app, std::vector<std::string> &rawQueries,
+                std::string &configFilePath, std::string &schemaFilePath,
+                bool &allowMissing, bool &getDefaultKeys, bool &strictMode,
+                bool &followSource, bool &debugLogging, std::string &delimiter,
+                std::string &exportFormat, bool &listBinds) {
   app.add_option(
          "--query,-Q", rawQueries,
          "Query to execute (format: query[expectedType][expectedRegex], can be "
          "specified multiple times)")
-      ->required()
       ->take_all();
   app.add_option("config_file", configFilePath, "Configuration file")
       ->required();
@@ -160,71 +147,237 @@ int main(int argc, char **argv) {
   app.add_flag("--debug", debugLogging, "Enable debug logging");
   app.add_option("--delimiter,-D", delimiter,
                  "Delimiter for plain output (default: newline)");
-  CLI11_PARSE(app, argc, argv);
-  configFilePath = hyprquery::ConfigUtils::normalizePath(configFilePath);
-  auto resolvedPaths = hyprquery::SourceHandler::resolvePath(configFilePath);
+  app.add_flag("--binds", listBinds, "List all binds in the config file");
+}
+
+bool noOperationRequested(bool listBinds,
+                          const std::vector<std::string> &rawQueries) {
+  return !listBinds && rawQueries.empty();
+}
+
+std::string resolveConfigPath(const std::string &configFilePath) {
+  std::string normalized =
+      hyprquery::ConfigUtils::normalizePath(configFilePath);
+  auto resolvedPaths = hyprquery::SourceHandler::resolvePath(normalized);
   if (resolvedPaths.empty()) {
     std::cerr << "Error: Could not resolve configuration file path: "
-              << configFilePath << std::endl;
-    return 1;
+              << normalized << std::endl;
+    return "";
   }
-  configFilePath = resolvedPaths.front().string();
-  if (!std::filesystem::exists(configFilePath)) {
-    std::cerr << "Error: Configuration file does not exist: " << configFilePath
+
+  std::string resolved = resolvedPaths.front().string();
+  if (!std::filesystem::exists(resolved)) {
+    std::cerr << "Error: Configuration file does not exist: " << resolved
               << std::endl;
-    return 1;
+    return "";
   }
+  return resolved;
+}
+
+std::string resolveSchemaPath(const std::string &schemaFilePath) {
+  if (schemaFilePath.empty()) {
+    return "";
+  }
+
+  std::string normalized =
+      hyprquery::ConfigUtils::normalizePath(schemaFilePath);
+  auto resolvedPaths = hyprquery::SourceHandler::resolvePath(normalized);
+  if (!resolvedPaths.empty()) {
+    normalized = resolvedPaths.front().string();
+  }
+
+  if (!std::filesystem::exists(normalized)) {
+    std::cerr << "Error: Schema file does not exist: " << normalized
+              << std::endl;
+    return "";
+  }
+  return normalized;
+}
+
+void setConfDir(const std::string &configFilePath) {
   hyprquery::SourceHandler::setConfigDir(
       std::filesystem::path(configFilePath).parent_path().string());
-  if (!schemaFilePath.empty()) {
-    schemaFilePath = hyprquery::ConfigUtils::normalizePath(schemaFilePath);
-    auto resolvedSchemaPath =
-        hyprquery::SourceHandler::resolvePath(schemaFilePath);
-    if (!resolvedSchemaPath.empty()) {
-      schemaFilePath = resolvedSchemaPath.front().string();
-    }
-    if (!std::filesystem::exists(schemaFilePath)) {
-      std::cerr << "Error: Schema file does not exist: " << schemaFilePath
-                << std::endl;
-      return 1;
-    }
-  }
+}
+
+std::unique_ptr<Hyprlang::CConfig>
+buildBinds(const std::string &configFilePath) {
   Hyprlang::SConfigOptions options;
-  options = {.verifyOnly = static_cast<bool>(getDefaultKeys ? 1 : 0),
-             .allowMissingConfig = static_cast<bool>(1)};
-  std::vector<hyprquery::QueryInput> queries =
-      hyprquery::parseQueryInputs(rawQueries);
-  std::vector<std::string> dynamicVars;
-  prepareConfig(queries, configFilePath, options, dynamicVars, debugLogging);
-  if (!schemaFilePath.empty()) {
-    hyprquery::ConfigUtils::addConfigValuesFromSchema(*pConfig, schemaFilePath);
+  options.allowMissingConfig = true;
+  options.pathIsStream = false;
+  return std::make_unique<Hyprlang::CConfig>(configFilePath.c_str(), options);
+}
+
+void regBindHandler(Hyprlang::CConfig *config) {
+  Hyprlang::SHandlerOptions hOpts;
+  hOpts.allowFlags = true;
+  config->registerHandler(
+      [](const char *command, const char *value) -> Hyprlang::CParseResult {
+        return hyprquery::KeybindCollector::handleBind(command, value);
+      },
+      "bind", hOpts);
+  config->registerHandler(
+      [](const char *command, const char *value) -> Hyprlang::CParseResult {
+        return hyprquery::KeybindCollector::handleUnbind(command, value);
+      },
+      "unbind", hOpts);
+  hyprquery::Logger::debug(
+      "Registered handler for 'bind', 'unbind', all bind* "
+      "variants. All other keywords are ignored by default.");
+}
+
+void regSourceHandler(Hyprlang::CConfig *config, bool followSource,
+                      const std::string &contextMessage) {
+  if (!followSource) {
+    return;
   }
-  if (followSource) {
-    if (debugLogging)
-      spdlog::debug("Registering source handler");
-    hyprquery::SourceHandler::registerHandler(pConfig);
-  }
-  if (debugLogging) {
-    spdlog::set_level(spdlog::level::debug);
-    spdlog::flush_on(spdlog::level::debug);
+  hyprquery::Logger::debug("{}", contextMessage);
+  hyprquery::SourceHandler::registerHandler(config);
+}
+
+void outputBinds(const std::vector<hyprquery::BindEntry> &binds,
+                 const std::string &exportFormat,
+                 const std::string &delimiter) {
+  if (exportFormat == "json") {
+    hyprquery::exportBindsJson(binds);
   } else {
-    spdlog::set_level(spdlog::level::off);
-  }
-  const auto PARSERESULT = pConfig->parse();
-  if (PARSERESULT.error) {
-    if (debugLogging)
-      spdlog::debug(std::string("Parse error: ") + PARSERESULT.getError());
-    if (strictMode) {
-      return 1;
+    for (const auto &bind : binds) {
+      std::cout << bind.raw << delimiter;
     }
   }
-  std::vector<hyprquery::QueryResult> results =
-      executeQueries(queries, dynamicVars, debugLogging);
-  int nullCount = 0;
-  for (const auto &r : results) {
-    if (r.type == "NULL")
-      nullCount++;
+}
+
+int runBindsMode(const std::string &configFilePath,
+                 const std::string &exportFormat, const std::string &delimiter,
+                 bool strictMode, bool debugLogging, bool followSource) {
+  hyprquery::SourceHandler::setSuppressNoMatchErrors(true);
+  hyprquery::SourceHandler::setStrictMode(strictMode);
+
+  std::string resolvedPath = resolveConfigPath(configFilePath);
+  if (resolvedPath.empty()) {
+    return 1;
   }
+
+  setConfDir(resolvedPath);
+
+  auto config = buildBinds(resolvedPath);
+  regBindHandler(config.get());
+  regSourceHandler(
+      config.get(), followSource,
+      "Registering source handler for 'source' keyword (main.cpp, --binds "
+      "mode)");
+
+  auto binds = hyprquery::KeybindHandler::parseKeybinds(
+      resolvedPath, strictMode, followSource, config.get());
+  outputBinds(binds, exportFormat, delimiter);
+
+  return 0;
+}
+
+Hyprlang::SConfigOptions createQueryConfigOptions(bool getDefaultKeys) {
+  Hyprlang::SConfigOptions options;
+  options.verifyOnly = getDefaultKeys;
+  options.allowMissingConfig = true;
+  return options;
+}
+
+void configureDebugLogging(bool debugLogging) {
+  hyprquery::Logger::setDebug(debugLogging);
+}
+
+bool parseConfigSucceeded(bool strictMode) {
+  const auto parseResult = pConfig->parse();
+  if (parseResult.error) {
+    hyprquery::Logger::debug("Parse error: {}", parseResult.getError());
+    if (strictMode) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool hasNull(const std::vector<hyprquery::QueryResult> &results) {
+  for (const auto &r : results) {
+    if (r.type == "NULL") {
+      return true;
+    }
+  }
+  return false;
+}
+
+int runQueryMode(const std::string &configFilePath,
+                 const std::string &schemaFilePath,
+                 const std::vector<std::string> &rawQueries,
+                 const std::string &exportFormat, const std::string &delimiter,
+                 bool getDefaultKeys, bool strictMode, bool debugLogging,
+                 bool followSource) {
+  hyprquery::SourceHandler::setSuppressNoMatchErrors(false);
+  hyprquery::SourceHandler::setStrictMode(strictMode);
+
+  std::string resolvedPath = resolveConfigPath(configFilePath);
+  if (resolvedPath.empty()) {
+    return 1;
+  }
+
+  setConfDir(resolvedPath);
+
+  std::string resolvedSchema = resolveSchemaPath(schemaFilePath);
+  if (!schemaFilePath.empty() && resolvedSchema.empty()) {
+    return 1;
+  }
+
+  auto options = createQueryConfigOptions(getDefaultKeys);
+  auto queries = hyprquery::parseQueryInputs(rawQueries);
+  std::vector<std::string> dynamicVars;
+
+  prepareConfig(queries, resolvedPath, options, dynamicVars);
+
+  if (!resolvedSchema.empty()) {
+    hyprquery::ConfigUtils::addConfigValuesFromSchema(*pConfig, resolvedSchema);
+  }
+
+  regSourceHandler(pConfig, followSource, "Registering source handler");
+  configureDebugLogging(debugLogging);
+
+  if (!parseConfigSucceeded(strictMode)) {
+    return 1;
+  }
+
+  auto results = executeQueries(queries, dynamicVars);
   outputResults(results, exportFormat, delimiter, queries);
-  return nullCount > 0 ? 1 : 0;
+
+  return hasNull(results) ? 1 : 0;
+}
+
+int main(int argc, char **argv) {
+  CLI::App app{"hyprquery - A configuration parser for hypr* config files"};
+  std::vector<std::string> rawQueries;
+  std::string configFilePath;
+  std::string schemaFilePath;
+  bool allowMissing = false;
+  bool getDefaultKeys = false;
+  bool strictMode = false;
+  bool followSource = false;
+  bool debugLogging = false;
+  std::string delimiter = "\n";
+  std::string exportFormat;
+  bool listBinds = false;
+
+  cliOptions(app, rawQueries, configFilePath, schemaFilePath, allowMissing,
+             getDefaultKeys, strictMode, followSource, debugLogging, delimiter,
+             exportFormat, listBinds);
+  CLI11_PARSE(app, argc, argv);
+
+  if (noOperationRequested(listBinds, rawQueries)) {
+    std::cout << app.help() << std::endl;
+    return 0;
+  }
+
+  if (listBinds) {
+    return runBindsMode(configFilePath, exportFormat, delimiter, strictMode,
+                        debugLogging, followSource);
+  }
+
+  return runQueryMode(configFilePath, schemaFilePath, rawQueries, exportFormat,
+                      delimiter, getDefaultKeys, strictMode, debugLogging,
+                      followSource);
 }

@@ -12,6 +12,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 find_package(PkgConfig REQUIRED)
+pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
+
+find_package(PkgConfig REQUIRED)
 
 include(FetchContent)
 
@@ -21,20 +24,6 @@ if(HYPRQUERY_DISTRO_BUILD)
     set(USE_SYSTEM_HYPRLANG ON CACHE BOOL "Use system-installed hyprlang instead of FetchContent" FORCE)
 endif()
 
-if(HYPRQUERY_DISTRO_BUILD)
-    find_package(spdlog REQUIRED)
-else()
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-    set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
-    set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-    FetchContent_Declare(
-        spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG        v1.14.1
-    )
-    FetchContent_MakeAvailable(spdlog)
-    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
-endif()
 
 option(USE_SYSTEM_HYPRLANG "Use system-installed hyprlang instead of FetchContent" OFF)
 
@@ -86,9 +75,19 @@ set(SOURCES
     src/SourceHandler.cpp
     src/ExportJson.cpp
     src/ExportEnv.cpp
+    src/KeybindHandler.cpp
+    src/Logger.cpp
 )
 
+list(APPEND SOURCES src/XKBKeymapResolver.cpp)
 add_executable(hyq ${SOURCES})
+if(USE_SYSTEM_HYPRLANG)
+    target_link_libraries(hyq PRIVATE hyprlang::hyprlang ${XKBCOMMON_LIBRARIES})
+else()
+    target_link_libraries(hyq PRIVATE hyprlang ${XKBCOMMON_LIBRARIES})
+endif()
+target_include_directories(hyq PRIVATE ${XKBCOMMON_INCLUDE_DIRS})
+target_compile_options(hyq PRIVATE ${XKBCOMMON_CFLAGS_OTHER})
 
 if(USE_SYSTEM_HYPRLANG)
     target_include_directories(hyq PRIVATE
@@ -97,7 +96,6 @@ if(USE_SYSTEM_HYPRLANG)
     )
     target_link_libraries(hyq PRIVATE
         ${HYPRLANG_LIBRARIES}
-        spdlog::spdlog
         CLI11::CLI11
         nlohmann_json::nlohmann_json
     )
@@ -107,7 +105,6 @@ else()
     )
     target_link_libraries(hyq PRIVATE
         hyprlang
-        spdlog::spdlog
         CLI11::CLI11
         nlohmann_json::nlohmann_json
     )

@@ -1,10 +1,10 @@
 #include "SourceHandler.hpp"
 #include "ConfigUtils.hpp"
+#include "Logger.hpp"
 #include <cstring>
 
 #include <glob.h>
 #include <memory>
-#include <spdlog/spdlog.h>
 #include <wordexp.h>
 
 namespace hyprquery {
@@ -12,6 +12,8 @@ namespace hyprquery {
 Hyprlang::CConfig *SourceHandler::s_pConfig = nullptr;
 std::string SourceHandler::s_configDir = "";
 bool SourceHandler::s_initialized = false;
+bool SourceHandler::s_suppressNoMatchErrors = false;
+bool SourceHandler::s_strictMode = false;
 
 void SourceHandler::setConfigDir(const std::string &dir) { s_configDir = dir; }
 
@@ -35,10 +37,10 @@ SourceHandler::resolvePath(const std::string &filePath) {
 
   std::string normalizedPath = ConfigUtils::normalizePath(filePath);
 
-  spdlog::debug("Normalized path: {}", normalizedPath);
+  Logger::debug("Normalized path: {}", normalizedPath);
 
   if (normalizedPath.empty()) {
-    spdlog::error("Path is empty after normalization: {}", filePath);
+    Logger::error("Path is empty after normalization: {}", filePath);
     return paths;
   }
 
@@ -50,9 +52,9 @@ SourceHandler::resolvePath(const std::string &filePath) {
 
   if (ret != 0) {
     if (ret == GLOB_NOMATCH) {
-      spdlog::warn("No matches found for path: {}", normalizedPath);
+      Logger::warn("No matches found for path: {}", normalizedPath);
     } else {
-      spdlog::error("Glob error for pattern: {}", normalizedPath);
+      Logger::error("Glob error for pattern: {}", normalizedPath);
     }
 
     std::filesystem::path fallbackPath(normalizedPath);
@@ -74,15 +76,15 @@ SourceHandler::resolvePath(const std::string &filePath) {
     if (std::filesystem::exists(fsPath.parent_path())) {
       paths.push_back(fsPath);
     } else {
-      spdlog::warn("Directory does not exist: {}",
+      Logger::warn("Directory does not exist: {}",
                    fsPath.parent_path().string());
     }
   }
   globfree(&glob_result);
 
-  spdlog::debug("Resolved paths: ");
+  Logger::debug("Resolved paths: ");
   for (const auto &p : paths) {
-    spdlog::debug("PATHS: {}  ::: {}", s_configDir, p.string());
+    Logger::debug("PATHS: {}  ::: {}", s_configDir, p.string());
   }
 
   return paths;
@@ -107,22 +109,42 @@ Hyprlang::CParseResult SourceHandler::handleSource(const char *command,
       }};
 
   std::string absPath;
+  if (Logger::isDebug()) {
+    Logger::debug("[source] handleSource: rawpath='{}' s_configDir='{}'", path, s_configDir);
+  }
   if (path[0] == '~') {
     const char *home = getenv("HOME");
     absPath = home ? std::string(home) + path.substr(1) : path;
+    if (Logger::isDebug()) {
+      Logger::debug("[source] handleSource: expanded '~' to absPath='{}'", absPath);
+    }
   } else if (path[0] != '/') {
     absPath = s_configDir + "/" + path;
+    if (Logger::isDebug()) {
+      Logger::debug("[source] handleSource: relative path, absPath='{}'", absPath);
+    }
   } else {
     absPath = path;
+    if (Logger::isDebug()) {
+      Logger::debug("[source] handleSource: absolute path, absPath='{}'", absPath);
+    }
   }
 
   int r = glob(absPath.c_str(), GLOB_TILDE, nullptr, glob_buf.get());
   if (r != 0) {
+    if (r == GLOB_NOMATCH) {
+      if (s_strictMode) {
+        std::string err = "source= globbing error: found no match";
+        Logger::error("[source] handleSource: glob('{}') failed: {} (code={})", absPath, err, r);
+        result.setError(err.c_str());
+      } else {
+        Logger::debug("[source] handleSource: glob('{}') found no match (source file not present, skipping)", absPath);
+      }
+      return result;
+    }
     std::string err = std::string("source= globbing error: ") +
-                      (r == GLOB_NOMATCH   ? "found no match"
-                       : r == GLOB_ABORTED ? "read error"
-                                           : "out of memory");
-    spdlog::error("{}", err);
+                      (r == GLOB_ABORTED ? "read error" : "out of memory");
+    Logger::error("[source] handleSource: glob('{}') failed: {} (code={})", absPath, err, r);
     result.setError(err.c_str());
     return result;
   }
@@ -133,17 +155,21 @@ Hyprlang::CParseResult SourceHandler::handleSource(const char *command,
     std::string value = glob_buf->gl_pathv[i];
     if (!std::filesystem::is_regular_file(value)) {
       if (std::filesystem::exists(value)) {
-        spdlog::warn("source= skipping non-file {}", value);
+        Logger::warn("source= skipping non-file {}", value);
         continue;
       }
       std::string err = "source= file " + value + " doesn't exist!";
-      spdlog::error("{}", err);
+      Logger::error("{}", err);
       result.setError(err.c_str());
       return result;
     }
 
+    // Always set s_configDir to the parent of the file being parsed, even for the first include
     std::string configDirBackup = s_configDir;
     s_configDir = std::filesystem::path(value).parent_path().string();
+    if (Logger::isDebug()) {
+      Logger::debug("[source] handleSource: set s_configDir='{}' for file='{}'", s_configDir, value);
+    }
 
     auto parseResult = s_pConfig->parseFile(value.c_str());
 
@@ -171,7 +197,15 @@ void SourceHandler::registerHandler(Hyprlang::CConfig *config) {
       },
       "source", options);
 
-  spdlog::debug("Registered source handler");
+  Logger::debug("Registered source handler");
+}
+
+void SourceHandler::setSuppressNoMatchErrors(bool suppress) {
+    s_suppressNoMatchErrors = suppress;
+}
+
+void SourceHandler::setStrictMode(bool strict) {
+    s_strictMode = strict;
 }
 
 } // namespace hyprquery
