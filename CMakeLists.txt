@@ -79,6 +79,7 @@ set(SOURCES
     src/ExportEnv.cpp
     src/KeybindHandler.cpp
     src/Logger.cpp
+    src/SchemaExport.cpp
 )
 
 list(APPEND SOURCES src/XKBKeymapResolver.cpp)

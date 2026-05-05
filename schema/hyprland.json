@@ -5,22 +5,14 @@
       "description": "size of the border around windows",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 20,
-        "default": 1
-      }
-    },
-    {
-      "value": "general:no_border_on_floating",
-      "description": "disable borders for floating windows",
-      "type": "BOOL",
-      "data": {
-        "default": false
+        "max": 20
       }
     },
     {
       "value": "general:gaps_in",
-      "description": "gaps between windows\n\nsupports css style gaps (top, right, bottom, left -> 5 10 15 20)",
+      "description": "gaps between windows",
       "type": "STRING_SHORT",
       "data": {
         "default": "5"
@@ -28,10 +20,18 @@
     },
     {
       "value": "general:gaps_out",
-      "description": "gaps between windows and monitor edges\n\nsupports css style gaps (top, right, bottom, left -> 5 10 15 20)",
+      "description": "gaps between windows and monitor edges",
       "type": "STRING_SHORT",
       "data": {
         "default": "20"
+      }
+    },
+    {
+      "value": "general:float_gaps",
+      "description": "gaps between windows and monitor edges for floating windows",
+      "type": "STRING_SHORT",
+      "data": {
+        "default": "0"
       }
     },
     {
@@ -39,9 +39,9 @@
       "description": "gaps between workspaces. Stacks with gaps_out.",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 100,
-        "default": 0
+        "max": 100
       }
     },
     {
@@ -62,7 +62,7 @@
     },
     {
       "value": "general:col.nogroup_border",
-      "description": "inactive border color for window that cannot be added to a group (see denywindowfromgroup dispatcher)",
+      "description": "inactive border color for window that cannot be added to a group",
       "type": "GRADIENT",
       "data": {
         "default": "0xffffaaff"
@@ -105,9 +105,9 @@
       "description": "extends the area around the border where you can click and drag on, only used when general:resize_on_border is on.",
       "type": "INT",
       "data": {
+        "default": 15,
         "min": 0,
-        "max": 100,
-        "default": 15
+        "max": 100
       }
     },
     {
@@ -120,7 +120,7 @@
     },
     {
       "value": "general:allow_tearing",
-      "description": "master switch for allowing tearing to occur. See the Tearing page.",
+      "description": "master switch for allowing tearing to occur.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -131,9 +131,9 @@
       "description": "force floating windows to use a specific corner when being resized (1-4 going clockwise from top left, 0 to disable)",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 4,
-        "default": 0
+        "max": 4
       }
     },
     {
@@ -149,9 +149,9 @@
       "description": "minimum gap in pixels between windows before snapping",
       "type": "INT",
       "data": {
+        "default": 10,
         "min": 0,
-        "max": 100,
-        "default": 10
+        "max": 100
       }
     },
     {
@@ -159,9 +159,9 @@
       "description": "minimum gap in pixels between window and monitor edges before snapping",
       "type": "INT",
       "data": {
+        "default": 10,
         "min": 0,
-        "max": 100,
-        "default": 10
+        "max": 100
       }
     },
     {
@@ -173,53 +173,77 @@
       }
     },
     {
+      "value": "general:snap:respect_gaps",
+      "description": "if true, snapping will respect gaps between windows",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "general:modal_parent_blocking",
+      "description": "if true, parent windows of modals will not be interactive.",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "general:locale",
+      "description": "overrides the system locale",
+      "type": "STRING_SHORT",
+      "data": {
+        "default": ""
+      }
+    },
+    {
       "value": "decoration:rounding",
       "description": "rounded corners' radius (in layout px)",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 20,
-        "default": 0
+        "max": 20
       }
     },
     {
       "value": "decoration:rounding_power",
-      "description": "rouding power of corners (2 is a circle)",
+      "description": "rounding power of corners (2 is a circle)",
       "type": "FLOAT",
       "data": {
+        "default": 2,
         "min": 2,
-        "max": 10,
-        "default": 2
+        "max": 10
       }
     },
     {
       "value": "decoration:active_opacity",
-      "description": "opacity of active windows. [0.0 - 1.0]",
+      "description": "opacity of active windows.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 1,
-        "default": 1
+        "max": 1
       }
     },
     {
       "value": "decoration:inactive_opacity",
-      "description": "opacity of inactive windows. [0.0 - 1.0]",
+      "description": "opacity of inactive windows.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 1,
-        "default": 1
+        "max": 1
       }
     },
     {
       "value": "decoration:fullscreen_opacity",
-      "description": "opacity of fullscreen windows. [0.0 - 1.0]",
+      "description": "opacity of fullscreen windows.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 1,
-        "default": 1
+        "max": 1
       }
     },
     {
@@ -235,35 +259,27 @@
       "description": "Shadow range (size) in layout px",
       "type": "INT",
       "data": {
+        "default": 4,
         "min": 0,
-        "max": 100,
-        "default": 4
+        "max": 100
       }
     },
     {
       "value": "decoration:shadow:render_power",
-      "description": "in what power to render the falloff (more power, the faster the falloff) [1 - 4]",
+      "description": "in what power to render the falloff (more power, the faster the falloff)",
       "type": "INT",
       "data": {
+        "default": 3,
         "min": 1,
-        "max": 4,
-        "default": 3
+        "max": 4
       }
     },
     {
       "value": "decoration:shadow:sharp",
-      "description": "whether the shadow should be sharp or not. Akin to an infinitely high render power.",
+      "description": "whether the shadow should be sharp or not.",
       "type": "BOOL",
       "data": {
         "default": false
-      }
-    },
-    {
-      "value": "decoration:shadow:ignore_window",
-      "description": "if true, the shadow will not be rendered behind the window itself, only around it.",
-      "type": "BOOL",
-      "data": {
-        "default": true
       }
     },
     {
@@ -284,20 +300,68 @@
       "value": "decoration:shadow:offset",
       "description": "shadow's rendering offset.",
       "type": "VECTOR",
-      "data": {
-        "default": {},
-        "min": [-250, -250],
-        "max": [250, 250]
-      }
+      "data": {}
     },
     {
       "value": "decoration:shadow:scale",
-      "description": "shadow's scale. [0.0 - 1.0]",
+      "description": "shadow's scale.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 1,
-        "default": 1
+        "max": 1
+      }
+    },
+    {
+      "value": "decoration:glow:enabled",
+      "description": "enable inner glow on windows",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "decoration:glow:range",
+      "description": "glow range (size) in layout px",
+      "type": "INT",
+      "data": {
+        "default": 10,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "value": "decoration:glow:render_power",
+      "description": "in what power to render the falloff (more power, the faster the falloff)",
+      "type": "INT",
+      "data": {
+        "default": 3,
+        "min": 1,
+        "max": 4
+      }
+    },
+    {
+      "value": "decoration:glow:color",
+      "description": "glow's color. Alpha dictates glow's opacity.",
+      "type": "COLOR",
+      "data": {
+        "default": "0xee33ccff"
+      }
+    },
+    {
+      "value": "decoration:glow:color_inactive",
+      "description": "inactive glow color. (if not set, will fall back to decoration:glow:color)",
+      "type": "COLOR",
+      "data": {
+        "default": "0x0033ccff"
+      }
+    },
+    {
+      "value": "decoration:dim_modal",
+      "description": "enables dimming of parents of modal windows",
+      "type": "BOOL",
+      "data": {
+        "default": true
       }
     },
     {
@@ -310,40 +374,48 @@
     },
     {
       "value": "decoration:dim_strength",
-      "description": "how much inactive windows should be dimmed [0.0 - 1.0]",
+      "description": "how much inactive windows should be dimmed",
       "type": "FLOAT",
       "data": {
+        "default": 0.5,
         "min": 0,
-        "max": 1,
-        "default": 0.5
+        "max": 1
       }
     },
     {
       "value": "decoration:dim_special",
-      "description": "how much to dim the rest of the screen by when a special workspace is open. [0.0 - 1.0]",
+      "description": "how much to dim the rest of the screen by when a special workspace is open.",
       "type": "FLOAT",
       "data": {
+        "default": 0.2,
         "min": 0,
-        "max": 1,
-        "default": 0.2
+        "max": 1
       }
     },
     {
       "value": "decoration:dim_around",
-      "description": "how much the dimaround window rule should dim by. [0.0 - 1.0]",
+      "description": "how much the dimaround window rule should dim by.",
       "type": "FLOAT",
       "data": {
+        "default": 0.4,
         "min": 0,
-        "max": 1,
-        "default": 0.4
+        "max": 1
       }
     },
     {
       "value": "decoration:screen_shader",
-      "description": "screen_shader a path to a custom shader to be applied at the end of rendering. See examples/screenShader.frag for an example.",
+      "description": "a path to a custom shader to be applied at the end of rendering.",
       "type": "STRING_LONG",
       "data": {
         "default": ""
+      }
+    },
+    {
+      "value": "decoration:border_part_of_window",
+      "description": "whether the border should be treated as a part of the window.",
+      "type": "BOOL",
+      "data": {
+        "default": true
       }
     },
     {
@@ -359,9 +431,9 @@
       "description": "blur size (distance)",
       "type": "INT",
       "data": {
+        "default": 8,
         "min": 0,
-        "max": 100,
-        "default": 8
+        "max": 100
       }
     },
     {
@@ -369,9 +441,9 @@
       "description": "the amount of passes to perform",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 10,
-        "default": 1
+        "max": 10
       }
     },
     {
@@ -384,7 +456,7 @@
     },
     {
       "value": "decoration:blur:new_optimizations",
-      "description": "whether to enable further optimizations to the blur. Recommended to leave on, as it will massively improve performance.",
+      "description": "whether to enable further optimizations to the blur.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -392,7 +464,7 @@
     },
     {
       "value": "decoration:blur:xray",
-      "description": "if enabled, floating windows will ignore tiled windows in their blur. Only available if blur_new_optimizations is true. Will reduce overhead on floating blur significantly.",
+      "description": "if enabled, floating windows will ignore tiled windows in their blur.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -400,52 +472,52 @@
     },
     {
       "value": "decoration:blur:noise",
-      "description": "how much noise to apply. [0.0 - 1.0]",
+      "description": "how much noise to apply.",
       "type": "FLOAT",
       "data": {
+        "default": 0.0117,
         "min": 0,
-        "max": 1,
-        "default": 0.0117
+        "max": 1
       }
     },
     {
       "value": "decoration:blur:contrast",
-      "description": "contrast modulation for blur. [0.0 - 2.0]",
+      "description": "contrast modulation for blur.",
       "type": "FLOAT",
       "data": {
+        "default": 0.8916,
         "min": 0,
-        "max": 2,
-        "default": 0.8916
+        "max": 2
       }
     },
     {
       "value": "decoration:blur:brightness",
-      "description": "brightness modulation for blur. [0.0 - 2.0]",
+      "description": "brightness modulation for blur.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 2,
-        "default": 0.8172
+        "max": 2
       }
     },
     {
       "value": "decoration:blur:vibrancy",
-      "description": "Increase saturation of blurred colors. [0.0 - 1.0]",
+      "description": "Increase saturation of blurred colors.",
       "type": "FLOAT",
       "data": {
+        "default": 0.1696,
         "min": 0,
-        "max": 1,
-        "default": 0.1696
+        "max": 1
       }
     },
     {
       "value": "decoration:blur:vibrancy_darkness",
-      "description": "How strong the effect of vibrancy is on dark areas . [0.0 - 1.0]",
+      "description": "How strong the effect of vibrancy is on dark areas.",
       "type": "FLOAT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 1,
-        "default": 0
+        "max": 1
       }
     },
     {
@@ -466,12 +538,12 @@
     },
     {
       "value": "decoration:blur:popups_ignorealpha",
-      "description": "works like ignorealpha in layer rules. If pixel opacity is below set value, will not blur. [0.0 - 1.0]",
+      "description": "works like ignorealpha in layer rules. If pixel opacity is below set value, will not blur.",
       "type": "FLOAT",
       "data": {
+        "default": 0.2,
         "min": 0,
-        "max": 1,
-        "default": 0.2
+        "max": 1
       }
     },
     {
@@ -484,12 +556,12 @@
     },
     {
       "value": "decoration:blur:input_methods_ignorealpha",
-      "description": "works like ignorealpha in layer rules. If pixel opacity is below set value, will not blur. [0.0 - 1.0]",
+      "description": "works like ignorealpha in layer rules. If pixel opacity is below set value, will not blur.",
       "type": "FLOAT",
       "data": {
+        "default": 0.2,
         "min": 0,
-        "max": 1,
-        "default": 0.2
+        "max": 1
       }
     },
     {
@@ -501,16 +573,16 @@
       }
     },
     {
-      "value": "animations:first_launch_animation",
-      "description": "enable first launch animation",
+      "value": "animations:workspace_wraparound",
+      "description": "changes the direction of slide animations between the first and last workspaces",
       "type": "BOOL",
       "data": {
-        "default": true
+        "default": false
       }
     },
     {
       "value": "input:kb_model",
-      "description": "Appropriate XKB keymap parameter. See the note below.",
+      "description": "Appropriate XKB keymap parameter.",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -550,7 +622,7 @@
     },
     {
       "value": "input:kb_file",
-      "description": "Appropriate XKB keymap parameter",
+      "description": "Appropriate XKB keymap file",
       "type": "STRING_LONG",
       "data": {
         "default": ""
@@ -566,7 +638,7 @@
     },
     {
       "value": "input:resolve_binds_by_sym",
-      "description": "Determines how keybinds act when multiple layouts are used. If false, keybinds will always act as if the first specified layout is active. If true, keybinds specified by symbols are activated when you type the respective symbol with the current layout.",
+      "description": "Determines how keybinds act when multiple layouts are used.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -577,9 +649,9 @@
       "description": "The repeat rate for held-down keys, in repeats per second.",
       "type": "INT",
       "data": {
+        "default": 25,
         "min": 0,
-        "max": 200,
-        "default": 25
+        "max": 200
       }
     },
     {
@@ -587,9 +659,9 @@
       "description": "Delay before a held-down key is repeated, in milliseconds.",
       "type": "INT",
       "data": {
+        "default": 600,
         "min": 0,
-        "max": 2000,
-        "default": 600
+        "max": 2000
       }
     },
     {
@@ -597,14 +669,14 @@
       "description": "Sets the mouse input sensitivity. Value is clamped to the range -1.0 to 1.0.",
       "type": "FLOAT",
       "data": {
+        "default": 0,
         "min": -1,
-        "max": 1,
-        "default": 0
+        "max": 1
       }
     },
     {
       "value": "input:accel_profile",
-      "description": "Sets the cursor acceleration profile. Can be one of adaptive, flat. Can also be custom, see below. Leave empty to use libinput's default mode for your input device. [adaptive/flat/custom]",
+      "description": "Sets the cursor acceleration profile. [adaptive/flat/custom]",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -612,10 +684,20 @@
     },
     {
       "value": "input:force_no_accel",
-      "description": "Force no cursor acceleration. This bypasses most of your pointer settings to get as raw of a signal as possible. Enabling this is not recommended due to potential cursor desynchronization.",
+      "description": "Force no cursor acceleration.",
       "type": "BOOL",
       "data": {
         "default": false
+      }
+    },
+    {
+      "value": "input:rotation",
+      "description": "Sets the rotation of a device in degrees clockwise. Value is clamped to the range 0 to 359.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 359
       }
     },
     {
@@ -628,7 +710,7 @@
     },
     {
       "value": "input:scroll_points",
-      "description": "Sets the scroll acceleration profile, when accel_profile is set to custom. Has to be in the form <step> <points>. Leave empty to have a flat scroll curve.",
+      "description": "Sets the scroll acceleration profile, when accel_profile is set to custom.",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -636,7 +718,7 @@
     },
     {
       "value": "input:scroll_method",
-      "description": "Sets the scroll method. Can be one of 2fg (2 fingers), edge, on_button_down, no_scroll. [2fg/edge/on_button_down/no_scroll]",
+      "description": "Sets the scroll method. [2fg/edge/on_button_down/no_scroll]",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -644,17 +726,17 @@
     },
     {
       "value": "input:scroll_button",
-      "description": "Sets the scroll button. Has to be an int, cannot be a string. Check wev if you have any doubts regarding the ID. 0 means default.",
+      "description": "Sets the scroll button. 0 means default.",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 300,
-        "default": 0
+        "max": 300
       }
     },
     {
       "value": "input:scroll_button_lock",
-      "description": "If the scroll button lock is enabled, the button does not need to be held down. Pressing and releasing the button toggles the button lock, which logically holds the button down or releases it. While the button is logically held down, motion events are converted to scroll events.",
+      "description": "If the scroll button lock is enabled, the button does not need to be held down.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -662,17 +744,17 @@
     },
     {
       "value": "input:scroll_factor",
-      "description": "Multiplier added to scroll movement for external mice. Note that there is a separate setting for touchpad scroll_factor.",
+      "description": "Multiplier added to scroll movement for external mice.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 2,
-        "default": 1
+        "max": 2
       }
     },
     {
       "value": "input:natural_scroll",
-      "description": "Inverts scrolling direction. When enabled, scrolling moves content directly, rather than manipulating a scrollbar.",
+      "description": "Inverts scrolling direction.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -680,21 +762,30 @@
     },
     {
       "value": "input:follow_mouse",
-      "description": "Specify if and how cursor movement should affect window focus. See the note below. [0/1/2/3]",
+      "description": "Specify if and how cursor movement should affect window focus.",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 3,
-        "default": 1
+        "max": 3
+      }
+    },
+    {
+      "value": "input:follow_mouse_threshold",
+      "description": "The smallest distance in logical pixels the mouse needs to travel for the window under it to get focused.",
+      "type": "FLOAT",
+      "data": {
+        "default": 0
       }
     },
     {
       "value": "input:focus_on_close",
-      "description": "Controls the window focus behavior when a window is closed. When set to 0, focus will shift to the next window candidate. When set to 1, focus will shift to the window under the cursor.",
-      "type": "CHOICE",
+      "description": "Controls the window focus behavior when a window is closed.",
+      "type": "INT",
       "data": {
         "default": 0,
-        "choices": ["next", "cursor"]
+        "min": 0,
+        "max": 2
       }
     },
     {
@@ -707,12 +798,12 @@
     },
     {
       "value": "input:float_switch_override_focus",
-      "description": "If enabled (1 or 2), focus will change to the window under the cursor when changing from tiled-to-floating and vice versa. If 2, focus will also follow mouse on float-to-float switches.",
+      "description": "If enabled (1 or 2), focus will change to the window under the cursor when changing from tiled-to-floating and vice versa. If 2, focus will also follow mouse on \"\n                \"float-to-float switches.",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 2,
-        "default": 1
+        "max": 2
       }
     },
     {
@@ -725,22 +816,32 @@
     },
     {
       "value": "input:off_window_axis_events",
-      "description": "Handles axis events around (gaps/border for tiled, dragarea/border for floated) a focused window. 0 ignores axis events 1 sends out-of-bound coordinates 2 fakes pointer coordinates to the closest point inside the window 3 warps the cursor to the closest point inside the window",
+      "description": "How to handle axis events around a focused window.",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 3,
-        "default": 1
+        "max": 3
       }
     },
     {
       "value": "input:emulate_discrete_scroll",
-      "description": "Emulates discrete scrolling from high resolution scrolling events. 0 disables it, 1 enables handling of non-standard events only, and 2 force enables all scroll wheel events to be handled",
+      "description": "Emulates discrete scrolling from high resolution scrolling events.",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 2,
-        "default": 1
+        "max": 2
+      }
+    },
+    {
+      "value": "input:follow_mouse_shrink",
+      "description": "Shrinks the inactive window hitboxes used for focus detection by the specified number of pixels. This creates a dead zone in gaps between windows where moving \"\n                \"the cursor will not change focus. Works only with follow_mouse = 1.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 300
       }
     },
     {
@@ -753,7 +854,7 @@
     },
     {
       "value": "input:touchpad:natural_scroll",
-      "description": "Inverts scrolling direction. When enabled, scrolling moves content directly, rather than manipulating a scrollbar.",
+      "description": "Inverts scrolling direction.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -764,14 +865,14 @@
       "description": "Multiplier applied to the amount of scroll movement.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 2,
-        "default": 1
+        "max": 2
       }
     },
     {
       "value": "input:touchpad:middle_button_emulation",
-      "description": "Sending LMB and RMB simultaneously will be interpreted as a middle click. This disables any touchpad area that would normally send a middle click based on location.",
+      "description": "Sending LMB and RMB simultaneously will be interpreted as a middle click.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -779,7 +880,7 @@
     },
     {
       "value": "input:touchpad:tap_button_map",
-      "description": "Sets the tap button mapping for touchpad button emulation. Can be one of lrm (default) or lmr (Left, Middle, Right Buttons). [lrm/lmr]",
+      "description": "Sets the tap button mapping for touchpad button emulation. [lrm/lmr]",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -787,7 +888,7 @@
     },
     {
       "value": "input:touchpad:clickfinger_behavior",
-      "description": "Button presses with 1, 2, or 3 fingers will be mapped to LMB, RMB, and MMB respectively. This disables interpretation of clicks based on location on the touchpad.",
+      "description": "Button presses with 1, 2, or 3 fingers will be mapped to LMB, RMB, and MMB respectively.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -803,10 +904,12 @@
     },
     {
       "value": "input:touchpad:drag_lock",
-      "description": "When enabled, lifting the finger off for a short time while dragging will not drop the dragged item.",
-      "type": "BOOL",
+      "description": "When enabled, lifting the finger off while dragging will not drop the dragged item.",
+      "type": "INT",
       "data": {
-        "default": false
+        "default": 0,
+        "min": 0,
+        "max": 2
       }
     },
     {
@@ -814,22 +917,48 @@
       "description": "Sets the tap and drag mode for the touchpad",
       "type": "BOOL",
       "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "input:touchpad:flip_x",
+      "description": "Inverts the horizontal movement of the touchpad",
+      "type": "BOOL",
+      "data": {
         "default": false
       }
     },
     {
-      "value": "input:touchdevice:transform",
-      "description": "Transform the input from touchdevices. The possible transformations are the same as those of the monitors",
+      "value": "input:touchpad:flip_y",
+      "description": "Inverts the vertical movement of the touchpad",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "input:touchpad:drag_3fg",
+      "description": "Whether to use 3 or 4 finger drag.",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 6,
-        "default": 0
+        "max": 2
+      }
+    },
+    {
+      "value": "input:touchdevice:transform",
+      "description": "Transform the input from touchdevices.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 6
       }
     },
     {
       "value": "input:touchdevice:output",
-      "description": "The monitor to bind touch devices. The default is auto-detection. To stop auto-detection, use an empty string or the [[Empty]] value.",
+      "description": "The monitor to bind touch devices.",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -844,18 +973,36 @@
       }
     },
     {
-      "value": "input:tablet:transform",
-      "description": "transform the input from tablets. The possible transformations are the same as those of the monitors",
+      "value": "input:virtualkeyboard:share_states",
+      "description": "Unify key down states and modifier states with other keyboards.",
       "type": "INT",
       "data": {
+        "default": 2,
         "min": 0,
-        "max": 6,
-        "default": 0
+        "max": 2
+      }
+    },
+    {
+      "value": "input:virtualkeyboard:release_pressed_on_close",
+      "description": "Release all pressed keys by virtual keyboard on close.",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "input:tablet:transform",
+      "description": "transform the input from tablets.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 6
       }
     },
     {
       "value": "input:tablet:output",
-      "description": "the monitor to bind tablets. Can be current or a monitor name. Leave empty to map across all monitors.",
+      "description": "the monitor to bind tablets.",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -863,17 +1010,13 @@
     },
     {
       "value": "input:tablet:region_position",
-      "description": "position of the mapped region in monitor layout relative to the top left corner of the bound monitor or all monitors.",
+      "description": "position of the mapped region in monitor layout.",
       "type": "VECTOR",
-      "data": {
-        "default": {},
-        "min": [-20000, -20000],
-        "max": [20000, 20000]
-      }
+      "data": {}
     },
     {
       "value": "input:tablet:absolute_region_position",
-      "description": "whether to treat the region_position as an absolute position in monitor layout. Only applies when output is empty.",
+      "description": "whether to treat the region_position as an absolute position in monitor layout.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -881,13 +1024,9 @@
     },
     {
       "value": "input:tablet:region_size",
-      "description": "size of the mapped region. When this variable is set, tablet input will be mapped to the region. [0, 0] or invalid size means unset.",
+      "description": "size of the mapped region.",
       "type": "VECTOR",
-      "data": {
-        "default": {},
-        "min": [-100, -100],
-        "max": [4000, 4000]
-      }
+      "data": {}
     },
     {
       "value": "input:tablet:relative_input",
@@ -909,56 +1048,22 @@
       "value": "input:tablet:active_area_size",
       "description": "size of tablet's active area in mm",
       "type": "VECTOR",
-      "data": {
-        "default": {},
-        "min": [],
-        "max": [500, 500]
-      }
+      "data": {}
     },
     {
       "value": "input:tablet:active_area_position",
       "description": "position of the active area in mm",
       "type": "VECTOR",
-      "data": {
-        "default": {},
-        "min": [],
-        "max": [500, 500]
-      }
-    },
-    {
-      "value": "gestures:workspace_swipe",
-      "description": "enable workspace swipe gesture on touchpad",
-      "type": "BOOL",
-      "data": {
-        "default": false
-      }
-    },
-    {
-      "value": "gestures:workspace_swipe_fingers",
-      "description": "how many fingers for the touchpad gesture",
-      "type": "INT",
-      "data": {
-        "min": 0,
-        "max": 5,
-        "default": 3
-      }
-    },
-    {
-      "value": "gestures:workspace_swipe_min_fingers",
-      "description": "if enabled, workspace_swipe_fingers is considered the minimum number of fingers to swipe",
-      "type": "BOOL",
-      "data": {
-        "default": false
-      }
+      "data": {}
     },
     {
       "value": "gestures:workspace_swipe_distance",
       "description": "in px, the distance of the touchpad gesture",
       "type": "INT",
       "data": {
+        "default": 300,
         "min": 0,
-        "max": 2000,
-        "default": 300
+        "max": 2000
       }
     },
     {
@@ -987,22 +1092,22 @@
     },
     {
       "value": "gestures:workspace_swipe_min_speed_to_force",
-      "description": "minimum speed in px per timepoint to force the change ignoring cancel_ratio. Setting to 0 will disable this mechanic.",
+      "description": "minimum speed in px per timepoint to force the change ignoring cancel_ratio.",
       "type": "INT",
       "data": {
+        "default": 30,
         "min": 0,
-        "max": 200,
-        "default": 30
+        "max": 200
       }
     },
     {
       "value": "gestures:workspace_swipe_cancel_ratio",
-      "description": "how much the swipe has to proceed in order to commence it. (0.7 -> if > 0.7 * distance, switch, if less, revert) [0.0 - 1.0]",
+      "description": "how much the swipe has to proceed in order to commence it.",
       "type": "FLOAT",
       "data": {
+        "default": 0.5,
         "min": 0,
-        "max": 1,
-        "default": 0.5
+        "max": 1
       }
     },
     {
@@ -1015,7 +1120,7 @@
     },
     {
       "value": "gestures:workspace_swipe_direction_lock",
-      "description": "if enabled, switching direction will be locked when you swipe past the direction_lock_threshold (touchpad only).",
+      "description": "if enabled, switching direction will be locked when you swipe past the direction_lock_threshold.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -1023,12 +1128,12 @@
     },
     {
       "value": "gestures:workspace_swipe_direction_lock_threshold",
-      "description": "in px, the distance to swipe before direction lock activates (touchpad only).",
+      "description": "in px, the distance to swipe before direction lock activates.",
       "type": "INT",
       "data": {
+        "default": 10,
         "min": 0,
-        "max": 200,
-        "default": 10
+        "max": 200
       }
     },
     {
@@ -1045,6 +1150,16 @@
       "type": "BOOL",
       "data": {
         "default": false
+      }
+    },
+    {
+      "value": "gestures:close_max_timeout",
+      "description": "Timeout for closing windows with the close gesture, in ms.",
+      "type": "INT",
+      "data": {
+        "default": 1000,
+        "min": 10,
+        "max": 2000
       }
     },
     {
@@ -1080,32 +1195,32 @@
       }
     },
     {
-      "value": "general:col.border_active",
-      "description": "border color for inactive windows",
+      "value": "group:col.border_active",
+      "description": "active group border color",
       "type": "GRADIENT",
       "data": {
         "default": "0x66ffff00"
       }
     },
     {
-      "value": "general:col.border_inactive",
-      "description": "border color for the active window",
+      "value": "group:col.border_inactive",
+      "description": "inactive group border color",
       "type": "GRADIENT",
       "data": {
         "default": "0x66777700"
       }
     },
     {
-      "value": "general:col.border_locked_active",
-      "description": "inactive border color for window that cannot be added to a group (see denywindowfromgroup dispatcher)",
+      "value": "group:col.border_locked_inactive",
+      "description": "inactive locked group border color",
       "type": "GRADIENT",
       "data": {
         "default": "0x66ff5500"
       }
     },
     {
-      "value": "general:col.border_locked_inactive",
-      "description": "active border color for window that cannot be added to a group",
+      "value": "group:col.border_locked_active",
+      "description": "active locked group border color",
       "type": "GRADIENT",
       "data": {
         "default": "0x66775500"
@@ -1121,11 +1236,12 @@
     },
     {
       "value": "group:drag_into_group",
-      "description": "whether dragging a window into a unlocked group will merge them. Options: 0 (disabled), 1 (enabled), 2 (only when dragging into the groupbar)",
-      "type": "CHOICE",
+      "description": "whether dragging a window into a unlocked group will merge them.",
+      "type": "INT",
       "data": {
-        "default": 0,
-        "choices": ["disabled", "enabled", "only when dragging into the groupbar"]
+        "default": 1,
+        "min": 0,
+        "max": 2
       }
     },
     {
@@ -1154,20 +1270,32 @@
     },
     {
       "value": "group:groupbar:font_family",
-      "description": "font used to display groupbar titles, use misc:font_family if not specified",
+      "description": "font used to display groupbar titles",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
       }
     },
     {
+      "value": "group:groupbar:font_weight_active",
+      "description": "weight of the font used to display active groupbar titles",
+      "type": "STRING_SHORT",
+      "data": {}
+    },
+    {
+      "value": "group:groupbar:font_weight_inactive",
+      "description": "weight of the font used to display inactive groupbar titles",
+      "type": "STRING_SHORT",
+      "data": {}
+    },
+    {
       "value": "group:groupbar:font_size",
       "description": "font size of groupbar title",
       "type": "INT",
       "data": {
+        "default": 8,
         "min": 2,
-        "max": 64,
-        "default": 8
+        "max": 64
       }
     },
     {
@@ -1175,7 +1303,7 @@
       "description": "enables gradients",
       "type": "BOOL",
       "data": {
-        "default": true
+        "default": false
       }
     },
     {
@@ -1183,9 +1311,29 @@
       "description": "height of the groupbar",
       "type": "INT",
       "data": {
+        "default": 14,
         "min": 1,
-        "max": 64,
-        "default": 14
+        "max": 64
+      }
+    },
+    {
+      "value": "group:groupbar:indicator_gap",
+      "description": "height of the gap between the groupbar indicator and title",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 64
+      }
+    },
+    {
+      "value": "group:groupbar:indicator_height",
+      "description": "height of the groupbar indicator",
+      "type": "INT",
+      "data": {
+        "default": 3,
+        "min": 1,
+        "max": 64
       }
     },
     {
@@ -1201,9 +1349,9 @@
       "description": "sets the decoration priority for groupbars",
       "type": "INT",
       "data": {
+        "default": 3,
         "min": 0,
-        "max": 6,
-        "default": 3
+        "max": 6
       }
     },
     {
@@ -1223,17 +1371,91 @@
       }
     },
     {
+      "value": "group:groupbar:rounding",
+      "description": "how much to round the groupbar",
+      "type": "INT",
+      "data": {
+        "default": 1,
+        "min": 0,
+        "max": 20
+      }
+    },
+    {
+      "value": "group:groupbar:rounding_power",
+      "description": "rounding power of groupbar corners (2 is a circle)",
+      "type": "FLOAT",
+      "data": {
+        "default": 2,
+        "min": 2,
+        "max": 10
+      }
+    },
+    {
+      "value": "group:groupbar:gradient_rounding",
+      "description": "how much to round the groupbar gradient",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 20
+      }
+    },
+    {
+      "value": "group:groupbar:gradient_rounding_power",
+      "description": "rounding power of groupbar gradient corners (2 is a circle)",
+      "type": "FLOAT",
+      "data": {
+        "default": 2,
+        "min": 2,
+        "max": 10
+      }
+    },
+    {
+      "value": "group:groupbar:round_only_edges",
+      "description": "if yes, will only round at the groupbar edges",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "group:groupbar:gradient_round_only_edges",
+      "description": "if yes, will only round at the groupbar gradient edges",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
       "value": "group:groupbar:text_color",
-      "description": "controls the group bar text color",
+      "description": "color for window titles in the groupbar",
       "type": "COLOR",
       "data": {
         "default": "0xffffffff"
       }
     },
     {
+      "value": "group:groupbar:text_color_inactive",
+      "description": "color for inactive windows' titles in the groupbar",
+      "type": "COLOR",
+      "data": {}
+    },
+    {
+      "value": "group:groupbar:text_color_locked_active",
+      "description": "color for the active window's title in a locked group",
+      "type": "COLOR",
+      "data": {}
+    },
+    {
+      "value": "group:groupbar:text_color_locked_inactive",
+      "description": "color for inactive windows' titles in locked groups",
+      "type": "COLOR",
+      "data": {}
+    },
+    {
       "value": "group:groupbar:col.active",
       "description": "active group border color",
-      "type": "COLOR",
+      "type": "GRADIENT",
       "data": {
         "default": "0x66ffff00"
       }
@@ -1241,7 +1463,7 @@
     {
       "value": "group:groupbar:col.inactive",
       "description": "inactive (out of focus) group border color",
-      "type": "COLOR",
+      "type": "GRADIENT",
       "data": {
         "default": "0x66777700"
       }
@@ -1249,17 +1471,73 @@
     {
       "value": "group:groupbar:col.locked_active",
       "description": "active locked group border color",
-      "type": "COLOR",
+      "type": "GRADIENT",
       "data": {
         "default": "0x66ff5500"
       }
     },
     {
       "value": "group:groupbar:col.locked_inactive",
-      "description": "controls the group bar text color",
-      "type": "COLOR",
+      "description": "inactive locked group border color",
+      "type": "GRADIENT",
       "data": {
         "default": "0x66775500"
+      }
+    },
+    {
+      "value": "group:groupbar:gaps_out",
+      "description": "gap between gradients and window",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 20
+      }
+    },
+    {
+      "value": "group:groupbar:gaps_in",
+      "description": "gap between gradients",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 20
+      }
+    },
+    {
+      "value": "group:groupbar:keep_upper_gap",
+      "description": "keep an upper gap above gradient",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "group:groupbar:text_offset",
+      "description": "set an offset for a text",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": -20,
+        "max": 20
+      }
+    },
+    {
+      "value": "group:groupbar:text_padding",
+      "description": "set horizontal padding for a text",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 22
+      }
+    },
+    {
+      "value": "group:groupbar:blur",
+      "description": "enable background blur for groupbars",
+      "type": "BOOL",
+      "data": {
+        "default": false
       }
     },
     {
@@ -1272,7 +1550,7 @@
     },
     {
       "value": "misc:disable_splash_rendering",
-      "description": "disables the Hyprland splash rendering. (requires a monitor reload to take effect)",
+      "description": "disables the Hyprland splash rendering.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1280,15 +1558,15 @@
     },
     {
       "value": "misc:col.splash",
-      "description": "Changes the color of the splash text (requires a monitor reload to take effect).",
+      "description": "Changes the color of the splash text.",
       "type": "COLOR",
       "data": {
-        "default": "0xffffffff"
+        "default": "0x55ffffff"
       }
     },
     {
       "value": "misc:font_family",
-      "description": "Set the global default font to render the text including debug fps/notification, config error messages and etc., selected from system fonts.",
+      "description": "Set the global default font to render the text.",
       "type": "STRING_SHORT",
       "data": {
         "default": "Sans"
@@ -1296,7 +1574,7 @@
     },
     {
       "value": "misc:splash_font_family",
-      "description": "Changes the font used to render the splash text, selected from system fonts (requires a monitor reload to take effect).",
+      "description": "Changes the font used to render the splash text.",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -1304,35 +1582,27 @@
     },
     {
       "value": "misc:force_default_wallpaper",
-      "description": "Enforce any of the 3 default wallpapers. Setting this to 0 or 1 disables the anime background. -1 means “random”. [-1/0/1/2]",
+      "description": "Force any of the 3 default wallpapers. [-1/0/1/2]",
       "type": "INT",
       "data": {
+        "default": -1,
         "min": -1,
-        "max": 2,
-        "default": -1
-      }
-    },
-    {
-      "value": "misc:vfr",
-      "description": "controls the VFR status of Hyprland. Heavily recommended to leave enabled to conserve resources.",
-      "type": "BOOL",
-      "data": {
-        "default": true
+        "max": 2
       }
     },
     {
       "value": "misc:vrr",
-      "description": "controls the VRR (Adaptive Sync) of your monitors. 0 - off, 1 - on, 2 - fullscreen only [0/1/2]",
+      "description": "controls the VRR (Adaptive Sync) of your monitors",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 2,
-        "default": 0
+        "max": 3
       }
     },
     {
       "value": "misc:mouse_move_enables_dpms",
-      "description": "If DPMS is set to off, wake up the monitors if the mouse move",
+      "description": "If DPMS is set to off, wake up the monitors if the mouse moves",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1347,8 +1617,16 @@
       }
     },
     {
+      "value": "misc:name_vk_after_proc",
+      "description": "Name virtual keyboards after the processes that create them.",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
       "value": "misc:always_follow_on_dnd",
-      "description": "Will make mouse focus follow the mouse when drag and dropping. Recommended to leave it enabled, especially for people using focus follows mouse at 0.",
+      "description": "Will make mouse focus follow the mouse when drag and dropping.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -1356,7 +1634,7 @@
     },
     {
       "value": "misc:layers_hog_keyboard_focus",
-      "description": "If true, will make keyboard-interactive layers keep their focus on mouse move (e.g. wofi, bemenu)",
+      "description": "If true, will make keyboard-interactive layers keep their focus on mouse move.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -1372,7 +1650,7 @@
     },
     {
       "value": "misc:animate_mouse_windowdragging",
-      "description": "If true, will animate windows being dragged by mouse, note that this can cause weird behavior on some curves",
+      "description": "If true, will animate windows being dragged by mouse.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1380,7 +1658,7 @@
     },
     {
       "value": "misc:disable_autoreload",
-      "description": "If true, the config will not reload automatically on save, and instead needs to be reloaded with hyprctl reload. Might save on battery.",
+      "description": "If true, the config will not reload automatically on save.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1396,7 +1674,7 @@
     },
     {
       "value": "misc:swallow_regex",
-      "description": "The class regex to be used for windows that should be swallowed (usually, a terminal). To know more about the list of regex which can be used use this cheatsheet.",
+      "description": "The class regex to be used for windows that should be swallowed.",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -1404,7 +1682,7 @@
     },
     {
       "value": "misc:swallow_exception_regex",
-      "description": "The title regex to be used for windows that should not be swallowed by the windows specified in swallow_regex (e.g. wev). The regex is matched against the parent (e.g. Kitty) window’s title on the assumption that it changes to whatever process it’s running.",
+      "description": "The title regex to be used for windows that should not be swallowed.",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -1412,7 +1690,7 @@
     },
     {
       "value": "misc:focus_on_activate",
-      "description": "Whether Hyprland should focus an app that requests to be focused (an activate request)",
+      "description": "Whether Hyprland should focus an app that requests to be focused.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1427,26 +1705,16 @@
       }
     },
     {
-      "value": "misc:render_ahead_of_time",
-      "description": "[Warning: buggy] starts rendering before your monitor displays a frame in order to lower latency",
+      "value": "misc:allow_session_lock_restore",
+      "description": "if true, will allow you to restart a lockscreen app in case it crashes.",
       "type": "BOOL",
       "data": {
         "default": false
       }
     },
     {
-      "value": "misc:render_ahead_safezone",
-      "description": "how many ms of safezone to add to rendering ahead of time. Recommended 1-2.",
-      "type": "INT",
-      "data": {
-        "min": 1,
-        "max": 10,
-        "default": 1
-      }
-    },
-    {
-      "value": "misc:allow_session_lock_restore",
-      "description": "if true, will allow you to restart a lockscreen app in case it crashes (red screen of death)",
+      "value": "misc:session_lock_xray",
+      "description": "keep rendering workspaces below your lockscreen",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1454,10 +1722,10 @@
     },
     {
       "value": "misc:background_color",
-      "description": "change the background color. (requires enabled disable_hyprland_logo)",
+      "description": "change the background color.",
       "type": "COLOR",
       "data": {
-        "default": "0x111111"
+        "default": "0xff111111"
       }
     },
     {
@@ -1469,13 +1737,13 @@
       }
     },
     {
-      "value": "misc:new_window_takes_over_fullscreen",
-      "description": "if there is a fullscreen or maximized window, decide whether a new tiled window opened should replace it, stay behind or disable the fullscreen/maximized state. 0 - behind, 1 - takes over, 2 - unfullscreen/unmaxize [0/1/2]",
+      "value": "misc:on_focus_under_fullscreen",
+      "description": "if there is a fullscreen or maximized window, decide whether a tiled window requested to focus should replace it.",
       "type": "INT",
       "data": {
+        "default": 2,
         "min": 0,
-        "max": 2,
-        "default": 0
+        "max": 2
       }
     },
     {
@@ -1488,12 +1756,12 @@
     },
     {
       "value": "misc:initial_workspace_tracking",
-      "description": "if enabled, windows will open on the workspace they were invoked on. 0 - disabled, 1 - single-shot, 2 - persistent (all children too)",
+      "description": "if enabled, windows will open on the workspace they were invoked on.",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 2,
-        "default": 1
+        "max": 2
       }
     },
     {
@@ -1509,9 +1777,9 @@
       "description": "the maximum limit for renderunfocused windows' fps in the background",
       "type": "INT",
       "data": {
+        "default": 15,
         "min": 1,
-        "max": 120,
-        "default": 15
+        "max": 120
       }
     },
     {
@@ -1523,8 +1791,16 @@
       }
     },
     {
-      "value": "misc:disable_hyprland_qtutils_check",
-      "description": "disable the warning if hyprland-qtutils is missing",
+      "value": "misc:disable_hyprland_guiutils_check",
+      "description": "disable the warning if hyprland-guiutils is missing",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "misc:disable_watchdog_warning",
+      "description": "whether to disable the warning about not using start-hyprland.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1532,12 +1808,54 @@
     },
     {
       "value": "misc:lockdead_screen_delay",
-      "description": "the delay in ms after the lockdead screen appears if the lock screen did not appear after a lock event occurred.",
+      "description": "the delay in ms after the lockdead screen appears.",
       "type": "INT",
       "data": {
+        "default": 1000,
         "min": 0,
-        "max": 5000,
-        "default": 1000
+        "max": 5000
+      }
+    },
+    {
+      "value": "misc:enable_anr_dialog",
+      "description": "whether to enable the ANR (app not responding) dialog when your apps hang",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "misc:anr_missed_pings",
+      "description": "number of missed pings before showing the ANR dialog",
+      "type": "INT",
+      "data": {
+        "default": 5,
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "value": "misc:screencopy_force_8b",
+      "description": "forces 8 bit screencopy",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "misc:disable_scale_notification",
+      "description": "disables notification popup when a monitor fails to set a suitable scale",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "misc:size_limits_tiled",
+      "description": "whether to apply minsize and maxsize rules to tiled windows",
+      "type": "BOOL",
+      "data": {
+        "default": false
       }
     },
     {
@@ -1553,14 +1871,22 @@
       "description": "in ms, how many ms to wait after a scroll event to allow passing another one for the binds.",
       "type": "INT",
       "data": {
+        "default": 300,
         "min": 0,
-        "max": 2000,
-        "default": 300
+        "max": 2000
       }
     },
     {
       "value": "binds:workspace_back_and_forth",
-      "description": "If enabled, an attempt to switch to the currently focused workspace will instead switch to the previous workspace. Akin to i3’s auto_back_and_forth.",
+      "description": "If enabled, an attempt to switch to the currently focused workspace will instead switch to the previous workspace.",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "binds:hide_special_on_workspace_change",
+      "description": "If enabled, changing the active workspace will hide the special workspace on the monitor.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1568,7 +1894,7 @@
     },
     {
       "value": "binds:allow_workspace_cycles",
-      "description": "If enabled, workspaces don’t forget their previous workspace, so cycles can be created by switching to the first workspace in a sequence, then endlessly going to the previous workspace.",
+      "description": "If enabled, workspaces don't forget their previous workspace.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1576,22 +1902,22 @@
     },
     {
       "value": "binds:workspace_center_on",
-      "description": "Whether switching workspaces should center the cursor on the workspace (0) or on the last active window for that workspace (1)",
+      "description": "Whether switching workspaces should center the cursor on the workspace (0) or on the last active window (1)",
       "type": "INT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 1,
-        "default": 0
+        "max": 1
       }
     },
     {
       "value": "binds:focus_preferred_method",
-      "description": "sets the preferred focus finding method when using focuswindow/movewindow/etc with a direction. 0 - history (recent have priority), 1 - length (longer shared edges have priority)",
+      "description": "sets the preferred focus finding method when using focuswindow/movewindow/etc with a direction.",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 1,
-        "default": 0
+        "max": 1
       }
     },
     {
@@ -1604,15 +1930,15 @@
     },
     {
       "value": "binds:movefocus_cycles_fullscreen",
-      "description": "If enabled, when on a fullscreen window, movefocus will cycle fullscreen, if not, it will move the focus in a direction.",
+      "description": "If enabled, when on a fullscreen window, movefocus will cycle fullscreen.",
       "type": "BOOL",
       "data": {
-        "default": true
+        "default": false
       }
     },
     {
       "value": "binds:movefocus_cycles_groupfirst",
-      "description": "If enabled, when in a grouped window, movefocus will cycle windows in the groups first, then at each ends of tabs, it'll move on to other windows/groups",
+      "description": "If enabled, when in a grouped window, movefocus will cycle windows in the groups first.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1620,7 +1946,7 @@
     },
     {
       "value": "binds:disable_keybind_grabbing",
-      "description": "If enabled, apps that request keybinds to be disabled (e.g. VMs) will not be able to do so.",
+      "description": "If enabled, apps that request keybinds to be disabled will not be able to do so.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1628,7 +1954,7 @@
     },
     {
       "value": "binds:window_direction_monitor_fallback",
-      "description": "If enabled, moving a window or focus over the edge of a monitor with a direction will move it to the next monitor in that direction.",
+      "description": "If enabled, moving a window or focus over the edge of a monitor with a direction will move it to the next monitor.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -1640,6 +1966,16 @@
       "type": "BOOL",
       "data": {
         "default": false
+      }
+    },
+    {
+      "value": "binds:drag_threshold",
+      "description": "Movement threshold in pixels for window dragging and c/g bind flags. 0 to disable.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 2147483647
       }
     },
     {
@@ -1667,54 +2003,34 @@
       }
     },
     {
-      "value": "opengl:nvidia_anti_flicker",
-      "description": "reduces flickering on nvidia at the cost of possible frame drops on lower-end GPUs. On non-nvidia, this is ignored.",
-      "type": "BOOL",
-      "data": {
-        "default": true
-      }
-    },
-    {
-      "value": "opengl:force_introspection",
-      "description": "forces introspection at all times. Introspection is aimed at reducing GPU usage in certain cases, but might cause graphical glitches on nvidia. 0 - nothing, 1 - force always on, 2 - force always on if nvidia",
-      "type": "INT",
-      "data": {
-        "min": 0,
-        "max": 2,
-        "default": 2
-      }
-    },
-    {
-      "value": "render:explicit_sync",
-      "description": "Whether to enable explicit sync support. Requires a hyprland restart. 0 - no, 1 - yes, 2 - auto based on the gpu driver",
-      "type": "INT",
-      "data": {
-        "min": 0,
-        "max": 2,
-        "default": 2
-      }
-    },
-    {
-      "value": "render:explicit_sync_kms",
-      "description": "Whether to enable explicit sync support for the KMS layer. Requires explicit_sync to be enabled. 0 - no, 1 - yes, 2 - auto based on the gpu driver",
-      "type": "INT",
-      "data": {
-        "min": 0,
-        "max": 2,
-        "default": 2
-      }
-    },
-    {
-      "value": "render:direct_scanout",
-      "description": "Enables direct scanout. Direct scanout attempts to reduce lag when there is only one fullscreen application on a screen (e.g. game). It is also recommended to set this to false if the fullscreen application shows graphical glitches.",
+      "value": "xwayland:create_abstract_socket",
+      "description": "Create the abstract Unix domain socket for XWayland",
       "type": "BOOL",
       "data": {
         "default": false
       }
     },
     {
+      "value": "opengl:nvidia_anti_flicker",
+      "description": "reduces flickering on nvidia at the cost of possible frame drops on lower-end GPUs.",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "render:direct_scanout",
+      "description": "Enables direct scanout.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
       "value": "render:expand_undersized_textures",
-      "description": "Whether to expand textures that have not yet resized to be larger, or to just stretch them instead.",
+      "description": "Whether to expand textures that have not yet resized to be larger.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -1725,60 +2041,161 @@
       "description": "Disable back buffer and bottom layer rendering.",
       "type": "BOOL",
       "data": {
-        "default": true
+        "default": false
       }
     },
     {
       "value": "render:ctm_animation",
-      "description": "Whether to enable a fade animation for CTM changes (hyprsunset). 2 means 'auto' (Yes on everything but Nvidia).",
+      "description": "Whether to enable a fade animation for CTM changes.",
       "type": "INT",
       "data": {
+        "default": 2,
         "min": 0,
-        "max": 2,
-        "default": 2
+        "max": 2
       }
     },
     {
-      "value": "render:allow_early_buffer_release",
-      "description": "Allow early buffer release event. Fixes stuttering and missing frames for some apps. May cause graphical glitches and memory leaks in others",
+      "value": "render:cm_enabled",
+      "description": "Enable Color Management pipelines (requires restart to fully take effect)",
       "type": "BOOL",
       "data": {
         "default": true
       }
     },
     {
-      "value": "cursor:use_nearest_neighbor",
-      "description": "sync xcursor theme with gsettings, it applies cursor-theme and cursor-size on theme load to gsettings making most CSD gtk based clients use same xcursor theme and size.",
+      "value": "render:send_content_type",
+      "description": "Report content type to allow monitor profile autoswitch",
       "type": "BOOL",
       "data": {
         "default": true
       }
     },
     {
-      "value": "cursor:no_hardware_cursors",
-      "description": "disables hardware cursors",
-      "type": "CHOICE",
+      "value": "render:cm_auto_hdr",
+      "description": "Auto-switch to hdr mode when fullscreen app is in hdr",
+      "type": "INT",
       "data": {
-        "default": 0,
-        "choices": ["Disabled", "Enabled", "Auto"]
+        "default": 1,
+        "min": 0,
+        "max": 2
       }
     },
     {
-      "value": "cursor:no_break_fs_vrr",
-      "description": "disables scheduling new frames on cursor movement for fullscreen apps with VRR enabled to avoid framerate spikes (requires no_hardware_cursors = true)",
+      "value": "render:new_render_scheduling",
+      "description": "enable new render scheduling, which should improve FPS on underpowered devices.",
       "type": "BOOL",
       "data": {
         "default": false
       }
     },
     {
-      "value": "cursor:min_refresh_rate",
-      "description": "minimum refresh rate for cursor movement when no_break_fs_vrr is active. Set to minimum supported refresh rate or higher",
+      "value": "render:non_shader_cm",
+      "description": "Enable CM without shader.",
       "type": "INT",
       "data": {
+        "default": 3,
+        "min": 0,
+        "max": 3
+      }
+    },
+    {
+      "value": "render:cm_sdr_eotf",
+      "description": "Default transfer function for displaying SDR apps.",
+      "type": "STRING_SHORT",
+      "data": {
+        "default": "default"
+      }
+    },
+    {
+      "value": "render:commit_timing_enabled",
+      "description": "Enable commit timing proto. Requires restart",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "render:icc_vcgt_enabled",
+      "description": "Enable sending VCGT ramps to KMS with ICC profiles",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "render:use_shader_blur_blend",
+      "description": "Use experimental blurred bg blending",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "render:use_fp16",
+      "description": "Use experimental internal FP16 buffer.",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "render:keep_unmodified_copy",
+      "description": "Keep umodified SDR frame copy for sreensharing.",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "render:non_shader_cm_interop",
+      "description": "non_shader_cm interaction with ctm proto (hyprsunset and similar).",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "cursor:invisible",
+      "description": "don't render cursors",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "cursor:no_hardware_cursors",
+      "description": "disables hardware cursors.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "cursor:no_break_fs_vrr",
+      "description": "disables scheduling new frames on cursor movement for fullscreen apps with VRR enabled.",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "cursor:min_refresh_rate",
+      "description": "minimum refresh rate for cursor movement when no_break_fs_vrr is active.",
+      "type": "INT",
+      "data": {
+        "default": 24,
         "min": 10,
-        "max": 500,
-        "default": 24
+        "max": 500
       }
     },
     {
@@ -1786,24 +2203,24 @@
       "description": "the padding, in logical px, between screen edges and the cursor",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 20,
-        "default": 1
+        "max": 20
       }
     },
     {
       "value": "cursor:inactive_timeout",
-      "description": "in seconds, after how many seconds of cursor’s inactivity to hide it. Set to 0 for never.",
-      "type": "INT",
+      "description": "in seconds, after how many seconds of cursor's inactivity to hide it. Set to 0 for never.",
+      "type": "FLOAT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 20,
-        "default": 0
+        "max": 20
       }
     },
     {
       "value": "cursor:no_warps",
-      "description": "if true, will not warp the cursor in many cases (focusing, keybinds, etc)",
+      "description": "if true, will not warp the cursor in many cases",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1811,7 +2228,7 @@
     },
     {
       "value": "cursor:persistent_warps",
-      "description": "When a window is refocused, the cursor returns to its last position relative to that window, rather than to the centre.",
+      "description": "When a window is refocused, the cursor returns to its last position relative to that window.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1819,16 +2236,27 @@
     },
     {
       "value": "cursor:warp_on_change_workspace",
-      "description": "Move the cursor to the last focused window after changing the workspace. Options: 0 (Disabled), 1 (Enabled), 2 (Force - ignores cursor:no_warps option)",
-      "type": "CHOICE",
+      "description": "Move the cursor to the last focused window after changing the workspace.",
+      "type": "INT",
       "data": {
         "default": 0,
-        "choices": ["Disabled", "Enabled", "Force"]
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "cursor:warp_on_toggle_special",
+      "description": "Move the cursor to the last focused window when toggling a special workspace.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 2
       }
     },
     {
       "value": "cursor:default_monitor",
-      "description": "the name of a default monitor for the cursor to be set to on startup (see hyprctl monitors for names)",
+      "description": "the name of a default monitor for the cursor to be set to on startup",
       "type": "STRING_SHORT",
       "data": {
         "default": ""
@@ -1836,20 +2264,36 @@
     },
     {
       "value": "cursor:zoom_factor",
-      "description": "the factor to zoom by around the cursor. Like a magnifying glass. Minimum 1.0 (meaning no zoom)",
+      "description": "the factor to zoom by around the cursor. 1 means no zoom.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 1,
-        "max": 10,
-        "default": 1
+        "max": 10
       }
     },
     {
       "value": "cursor:zoom_rigid",
-      "description": "whether the zoom should follow the cursor rigidly (cursor is always centered if it can be) or loosely",
+      "description": "whether the zoom should follow the cursor rigidly or loosely",
       "type": "BOOL",
       "data": {
         "default": false
+      }
+    },
+    {
+      "value": "cursor:zoom_disable_aa",
+      "description": "If enabled, when zooming, no antialiasing will be used",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "cursor:zoom_detached_camera",
+      "description": "Detaches the camera from the mouse when zoomed in",
+      "type": "BOOL",
+      "data": {
+        "default": true
       }
     },
     {
@@ -1877,8 +2321,58 @@
       }
     },
     {
+      "value": "cursor:hide_on_tablet",
+      "description": "Hides the cursor when the last input was a tablet input until a mouse input is done.",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
       "value": "cursor:use_cpu_buffer",
-      "description": "Makes HW cursors use a CPU buffer. Required on Nvidia to have HW cursors. Experimental",
+      "description": "Makes HW cursors use a CPU buffer.",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "cursor:sync_gsettings_theme",
+      "description": "sync xcursor theme with gsettings",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "cursor:warp_back_after_non_mouse_input",
+      "description": "warp the cursor back to where it was after using a non-mouse input to move it.",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "ecosystem:no_update_news",
+      "description": "disable the popup that shows up when you update hyprland to a new version.",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "ecosystem:no_donation_nag",
+      "description": "disable the popup that shows up twice a year encouraging to donate.",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "ecosystem:enforce_permissions",
+      "description": "whether to enable permission control.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1886,7 +2380,7 @@
     },
     {
       "value": "debug:overlay",
-      "description": "print the debug performance overlay. Disable VFR for accurate results.",
+      "description": "print the debug performance overlay.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1894,7 +2388,15 @@
     },
     {
       "value": "debug:damage_blink",
-      "description": "disable logging to a file",
+      "description": "flash damaged areas",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "debug:gl_debugging",
+      "description": "enable OpenGL debugging and error checking.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1918,12 +2420,12 @@
     },
     {
       "value": "debug:damage_tracking",
-      "description": "redraw only the needed bits of the display. Do not change. (default: full - 2) monitor - 1, none - 0",
+      "description": "redraw only the needed bits of the display.",
       "type": "INT",
       "data": {
+        "default": 2,
         "min": 0,
-        "max": 2,
-        "default": 2
+        "max": 2
       }
     },
     {
@@ -1939,9 +2441,9 @@
       "description": "set to 1 and then back to 0 to crash Hyprland.",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 1,
-        "default": 0
+        "max": 1
       }
     },
     {
@@ -1953,18 +2455,8 @@
       }
     },
     {
-      "value": "debug:watchdog_timeout",
-      "description": "sets the timeout in seconds for watchdog to abort processing of a signal of the main thread. Set to 0 to disable.",
-      "type": "INT",
-      "data": {
-        "min": 0,
-        "max": 20,
-        "default": 5
-      }
-    },
-    {
       "value": "debug:disable_scale_checks",
-      "description": "disables verification of the scale factors. Will result in pixel alignment and rounding errors.",
+      "description": "disables verification of the scale factors.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -1975,19 +2467,19 @@
       "description": "limits the number of displayed config file parsing errors.",
       "type": "INT",
       "data": {
+        "default": 5,
         "min": 0,
-        "max": 20,
-        "default": 5
+        "max": 20
       }
     },
     {
       "value": "debug:error_position",
-      "description": "sets the position of the error bar. top - 0, bottom - 1",
+      "description": "sets the position of the error bar.",
       "type": "INT",
       "data": {
+        "default": 0,
         "min": 0,
-        "max": 1,
-        "default": 0
+        "max": 1
       }
     },
     {
@@ -1999,25 +2491,113 @@
       }
     },
     {
-      "value": "dwindle:pseudotile",
-      "description": "enable pseudotiling. Pseudotiled windows retain their floating size when tiled.",
+      "value": "debug:log_damage",
+      "description": "enables logging the damage.",
       "type": "BOOL",
       "data": {
         "default": false
       }
     },
     {
+      "value": "debug:pass",
+      "description": "enables render pass debugging.",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "debug:full_cm_proto",
+      "description": "claims support for all cm proto features (requires restart)",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "debug:ds_handle_same_buffer",
+      "description": "Special case for DS with unmodified buffer",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "debug:ds_handle_same_buffer_fifo",
+      "description": "Special case for DS with unmodified buffer unlocks fifo",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "debug:fifo_pending_workaround",
+      "description": "Fifo workaround for empty pending list",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "debug:render_solitary_wo_damage",
+      "description": "Render solitary window with empty damage",
+      "type": "BOOL",
+      "data": {
+        "default": false
+      }
+    },
+    {
+      "value": "debug:vfr",
+      "description": "controls the VFR status of Hyprland. Do not turn off unless debugging",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "debug:invalidate_fp16",
+      "description": "allow fp16 buffer invalidation.",
+      "type": "INT",
+      "data": {
+        "default": 2,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "layout:single_window_aspect_ratio",
+      "description": "If specified, whenever only a single window is open, it will be coerced into the specified aspect ratio.",
+      "type": "VECTOR",
+      "data": {
+        "default": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "value": "layout:single_window_aspect_ratio_tolerance",
+      "description": "Minimum distance for single_window_aspect_ratio to take effect.",
+      "type": "FLOAT",
+      "data": {
+        "default": "0.1F",
+        "min": "0.F",
+        "max": "1.F"
+      }
+    },
+    {
       "value": "dwindle:force_split",
-      "description": "0 -> split follows mouse, 1 -> always split to the left (new = left or top) 2 -> always split to the right (new = right or bottom)",
-      "type": "CHOICE",
+      "description": "force a split direction for new windows",
+      "type": "INT",
       "data": {
         "default": 0,
-        "choices": ["follow mouse", "left or top", "right or bottom"]
+        "min": 0,
+        "max": 2
       }
     },
     {
       "value": "dwindle:preserve_split",
-      "description": "if enabled, the split (side/top) will not change regardless of what happens to the container.",
+      "description": "if enabled, the split will not change regardless of what happens to the container.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -2025,7 +2605,7 @@
     },
     {
       "value": "dwindle:smart_split",
-      "description": "if enabled, allows a more precise control over the window split direction based on the cursor's position. The window is conceptually divided into four triangles, and cursor's triangle determines the split direction. This feature also turns on preserve_split.",
+      "description": "if enabled, allows a more precise control over the window split direction based on the cursor's position.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -2033,7 +2613,7 @@
     },
     {
       "value": "dwindle:smart_resizing",
-      "description": "if enabled, resizing direction will be determined by the mouse's position on the window (nearest to which corner). Else, it is based on the window's tiling position.",
+      "description": "if enabled, resizing direction will be determined by the mouse's position on the window.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -2041,7 +2621,7 @@
     },
     {
       "value": "dwindle:permanent_direction_override",
-      "description": "if enabled, makes the preselect direction persist until either this mode is turned off, another direction is specified, or a non-direction is specified (anything other than l,r,u/t,d/b)",
+      "description": "if enabled, makes the preselect direction persist.",
       "type": "BOOL",
       "data": {
         "default": false
@@ -2049,12 +2629,12 @@
     },
     {
       "value": "dwindle:special_scale_factor",
-      "description": "specifies the scale factor of windows on the special workspace [0 - 1]",
+      "description": "specifies the scale factor of windows on the special workspace",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 1,
-        "default": 1
+        "max": 1
       }
     },
     {
@@ -2062,9 +2642,9 @@
       "description": "specifies the auto-split width multiplier",
       "type": "FLOAT",
       "data": {
-        "min": 0.1,
-        "max": 3,
-        "default": 1
+        "default": 1,
+        "min": "0.1F",
+        "max": 3
       }
     },
     {
@@ -2077,21 +2657,30 @@
     },
     {
       "value": "dwindle:default_split_ratio",
-      "description": "the default split ratio on window open. 1 means even 50/50 split. [0.1 - 1.9]",
+      "description": "the default split ratio on window open.",
       "type": "FLOAT",
       "data": {
-        "min": 0.1,
-        "max": 1.9,
-        "default": 1
+        "default": 1,
+        "min": "0.1F",
+        "max": "1.9F"
       }
     },
     {
       "value": "dwindle:split_bias",
-      "description": "specifies which window will receive the larger half of a split. positional - 0, current window - 1, opening window - 2 [0/1/2]",
-      "type": "CHOICE",
+      "description": "specifies which window will receive the split ratio.",
+      "type": "INT",
       "data": {
         "default": 0,
-        "choices": ["positional", "current", "opening"]
+        "min": 0,
+        "max": 1
+      }
+    },
+    {
+      "value": "dwindle:precise_mouse_move",
+      "description": "if enabled, bindm movewindow will drop the window more precisely depending on where your mouse is.",
+      "type": "BOOL",
+      "data": {
+        "default": false
       }
     },
     {
@@ -2104,22 +2693,22 @@
     },
     {
       "value": "master:special_scale_factor",
-      "description": "the scale of the special workspace windows. [0.0 - 1.0]",
+      "description": "the scale of the special workspace windows.",
       "type": "FLOAT",
       "data": {
+        "default": 1,
         "min": 0,
-        "max": 1,
-        "default": 1
+        "max": 1
       }
     },
     {
       "value": "master:mfact",
-      "description": "the size as a percentage of the master window, for example `mfact = 0.70` would mean 70% of the screen will be the master window, and 30% the slave [0.0 - 1.0]",
+      "description": "the size as a percentage of the master window.",
       "type": "FLOAT",
       "data": {
+        "default": 0.55,
         "min": 0,
-        "max": 1,
-        "default": 0.55
+        "max": 1
       }
     },
     {
@@ -2140,7 +2729,7 @@
     },
     {
       "value": "master:new_on_active",
-      "description": "`before`, `after`: place new window relative to the focused window; `none`: place new window according to the value of `new_on_top`. ",
+      "description": "`before`, `after`: place new window relative to the focused window; `none`: place new window according to new_on_top.",
       "type": "STRING_SHORT",
       "data": {
         "default": "none"
@@ -2148,36 +2737,28 @@
     },
     {
       "value": "master:orientation",
-      "description": "default placement of the master area, can be left, right, top, bottom or center",
+      "description": "default placement of the master area",
       "type": "STRING_SHORT",
       "data": {
         "default": "left"
       }
     },
     {
-      "value": "master:inherit_fullscreen",
-      "description": "inherit fullscreen status when cycling/swapping to another window (e.g. monocle layout)",
-      "type": "BOOL",
-      "data": {
-        "default": true
-      }
-    },
-    {
       "value": "master:slave_count_for_center_master",
-      "description": "when using orientation=center, make the master window centered only when at least this many slave windows are open. (Set 0 to always_center_master)",
+      "description": "when using orientation=center, make the master window centered only when at least this many slave windows are open.",
       "type": "INT",
       "data": {
+        "default": 2,
         "min": 0,
-        "max": 10,
-        "default": 2
+        "max": 10
       }
     },
     {
-      "value": "master:center_master_slaves_on_right",
-      "description": "set if the slaves should appear on right of master when slave_count_for_center_master > 2",
-      "type": "BOOL",
+      "value": "master:center_master_fallback",
+      "description": "Set fallback for center master when slaves are less than slave_count_for_center_master",
+      "type": "STRING_SHORT",
       "data": {
-        "default": true
+        "default": "left"
       }
     },
     {
@@ -2190,7 +2771,7 @@
     },
     {
       "value": "master:smart_resizing",
-      "description": "if enabled, resizing direction will be determined by the mouse's position on the window (nearest to which corner). Else, it is based on the window's tiling position.",
+      "description": "if enabled, resizing direction will be determined by the mouse's position on the window.",
       "type": "BOOL",
       "data": {
         "default": true
@@ -2198,31 +2779,119 @@
     },
     {
       "value": "master:drop_at_cursor",
-      "description": "when enabled, dragging and dropping windows will put them at the cursor position. Otherwise, when dropped at the stack side, they will go to the top/bottom of the stack depending on new_on_top.",
+      "description": "when enabled, dragging and dropping windows will put them at the cursor position.",
       "type": "BOOL",
       "data": {
         "default": true
       }
     },
     {
-      "value": "experimental:wide_color_gamut",
-      "description": "force wide color gamut for all supported outputs",
+      "value": "master:always_keep_position",
+      "description": "whether to keep the master window in its configured position when there are no slave windows",
       "type": "BOOL",
       "data": {
         "default": false
       }
     },
     {
-      "value": "experimental:hdr",
-      "description": "force static hdr for all supported outputs",
+      "value": "scrolling:fullscreen_on_one_column",
+      "description": "when enabled, a single column on a workspace will always span the entire screen.",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "scrolling:column_width",
+      "description": "the default width of a column.",
+      "type": "FLOAT",
+      "data": {
+        "default": 0.5,
+        "min": 0.1,
+        "max": 1.0
+      }
+    },
+    {
+      "value": "scrolling:focus_fit_method",
+      "description": "When a column is focused, what method should be used to bring it into view",
+      "type": "INT",
+      "data": {
+        "default": 1,
+        "min": 0,
+        "max": 1
+      }
+    },
+    {
+      "value": "scrolling:follow_focus",
+      "description": "when a window is focused, should the layout move to bring it into view automatically",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "scrolling:follow_min_visible",
+      "description": "when a window is focused, require that at least a given fraction of it is visible for focus to follow",
+      "type": "FLOAT",
+      "data": {
+        "default": 0.4,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    {
+      "value": "scrolling:explicit_column_widths",
+      "description": "A comma-separated list of preconfigured widths for colresize +conf/-conf",
+      "type": "STRING_SHORT",
+      "data": {
+        "default": "0.333, 0.5, 0.667, 1.0"
+      }
+    },
+    {
+      "value": "scrolling:direction",
+      "description": "Direction in which new windows appear and the layout scrolls",
+      "type": "STRING_SHORT",
+      "data": {
+        "default": "right"
+      }
+    },
+    {
+      "value": "scrolling:wrap_focus",
+      "description": "Determines if column focus wraps around",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "scrolling:wrap_swapcol",
+      "description": "Determines if column movement wraps around",
+      "type": "BOOL",
+      "data": {
+        "default": true
+      }
+    },
+    {
+      "value": "experimental:wp_cm_1_2",
+      "description": "Allow wp-cm-v1 version 2",
       "type": "BOOL",
       "data": {
         "default": false
       }
     },
     {
-      "value": "experimental:xx_color_management_v4",
-      "description": "enable color management protocol",
+      "value": "quirks:prefer_hdr",
+      "description": "Prefer HDR mode.",
+      "type": "INT",
+      "data": {
+        "default": 0,
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "value": "quirks:skip_non_kms_dmabuf_formats",
+      "description": "Do not report dmabuf formats which cannot be imported into KMS",
       "type": "BOOL",
       "data": {
         "default": false

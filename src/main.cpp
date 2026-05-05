@@ -3,6 +3,7 @@
 #include "ExportJson.hpp"
 #include "KeybindHandler.hpp"
 #include "Logger.hpp"
+#include "SchemaExport.hpp"
 #include "SourceHandler.hpp"
 
 #include <CLI/CLI.hpp>
@@ -130,7 +131,8 @@ void cliOptions(CLI::App &app, std::vector<std::string> &rawQueries,
                 std::string &configFilePath, std::string &schemaFilePath,
                 bool &allowMissing, bool &getDefaultKeys, bool &strictMode,
                 bool &followSource, bool &debugLogging, std::string &delimiter,
-                std::string &exportFormat, bool &listBinds) {
+                std::string &exportFormat, bool &listBinds, bool &dumpSchema,
+                bool &useFallback) {
   app.add_option(
          "--query,-Q", rawQueries,
          "Query to execute (format: query[expectedType][expectedRegex], can be "
@@ -142,17 +144,24 @@ void cliOptions(CLI::App &app, std::vector<std::string> &rawQueries,
   app.add_flag("--allow-missing", allowMissing, "Allow missing values");
   app.add_flag("--get-defaults", getDefaultKeys, "Get default keys");
   app.add_flag("--strict", strictMode, "Enable strict mode");
-  app.add_option("--export", exportFormat, "Export format: json or env");
+  app.add_option("--export", exportFormat, "Export format: json, env, hypr, lua, nested-json");
   app.add_flag("--source,-s", followSource, "Follow the source command");
   app.add_flag("--debug", debugLogging, "Enable debug logging");
   app.add_option("--delimiter,-D", delimiter,
                  "Delimiter for plain output (default: newline)");
   app.add_flag("--binds", listBinds, "List all binds in the config file");
+  app.add_flag("--dump", dumpSchema,
+               "Dump all config values known by the schema as JSON. "
+               "Requires --schema. Skips keys not present in the config "
+               "unless --fallback is set.");
+  app.add_flag("--fallback", useFallback,
+               "With --dump: use schema defaults for keys not found in the "
+               "config file");
 }
 
-bool noOperationRequested(bool listBinds,
+bool noOperationRequested(bool listBinds, bool dumpSchema,
                           const std::vector<std::string> &rawQueries) {
-  return !listBinds && rawQueries.empty();
+  return !listBinds && !dumpSchema && rawQueries.empty();
 }
 
 std::string resolveConfigPath(const std::string &configFilePath) {
@@ -361,13 +370,15 @@ int main(int argc, char **argv) {
   std::string delimiter = "\n";
   std::string exportFormat;
   bool listBinds = false;
+  bool dumpSchema = false;
+  bool useFallback = false;
 
   cliOptions(app, rawQueries, configFilePath, schemaFilePath, allowMissing,
              getDefaultKeys, strictMode, followSource, debugLogging, delimiter,
-             exportFormat, listBinds);
+             exportFormat, listBinds, dumpSchema, useFallback);
   CLI11_PARSE(app, argc, argv);
 
-  if (noOperationRequested(listBinds, rawQueries)) {
+  if (noOperationRequested(listBinds, dumpSchema, rawQueries)) {
     std::cout << app.help() << std::endl;
     return 0;
   }
@@ -375,6 +386,16 @@ int main(int argc, char **argv) {
   if (listBinds) {
     return runBindsMode(configFilePath, exportFormat, delimiter, strictMode,
                         debugLogging, followSource);
+  }
+
+  if (dumpSchema) {
+    if (schemaFilePath.empty()) {
+      std::cerr << "Error: --dump requires --schema <schema-file>" << std::endl;
+      return 1;
+    }
+    return hyprquery::runDumpMode(configFilePath, schemaFilePath, exportFormat,
+                                  strictMode, useFallback, followSource,
+                                  debugLogging);
   }
 
   return runQueryMode(configFilePath, schemaFilePath, rawQueries, exportFormat,
