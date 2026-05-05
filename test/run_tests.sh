@@ -187,7 +187,10 @@ else
   dump_lua="$(run_hyq --schema "$SCHEMA" --dump --export lua "$CONF")"
   assert_contains "dump --export lua: return {"          "return {"          "$dump_lua"
   assert_contains "dump --export lua: section table"     "general = {"       "$dump_lua"
-  assert_contains "dump --export lua: quoted value"      '"2"'               "$dump_lua"
+  assert_contains "dump --export lua: int value"         'border_size = 2'   "$dump_lua"
+  assert_contains "dump --export lua: bool value"        'enabled = true'    "$dump_lua"
+  assert_contains "dump --export lua: gradient value"    'colors = {'        "$dump_lua"
+  assert_contains "dump --export lua: string value"      'gaps_in = "3"'     "$dump_lua"
 
   # --export nested-json
   dump_nj="$(run_hyq --schema "$SCHEMA" --dump --export nested-json "$CONF")"

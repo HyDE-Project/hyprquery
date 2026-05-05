@@ -55,13 +55,13 @@ static std::string schemaDefaultToString(const nlohmann::json &data,
   const auto &def = data["default"];
 
   if (type == "BOOL") {
-    if (def.is_boolean()) return def.get<bool>() ? "1" : "0";
-    if (def.is_number()) return def.get<int>() ? "1" : "0";
+    if (def.is_boolean()) return def.get<bool>() ? "true" : "false";
+    if (def.is_number()) return def.get<int>() ? "true" : "false";
     if (def.is_string()) {
       const auto s = def.get<std::string>();
-      return (s == "true" || s == "1" || s == "yes" || s == "on") ? "1" : "0";
+      return (s == "true" || s == "1" || s == "yes" || s == "on") ? "true" : "false";
     }
-    return "0";
+    return "false";
   }
   if (type == "INT") {
     if (def.is_number()) return std::to_string(def.get<int64_t>());
@@ -99,18 +99,48 @@ static std::vector<std::string> splitKey(const std::string &key) {
   return parts;
 }
 
-// Build a nested map tree: path → value
-using Tree = std::map<std::string, nlohmann::json>;
+// Split "a:b.c:d" → ["a","b","c","d"]  (both ':' and '.' are separators)
+// Used for Lua export so that col.active_border becomes col = { active_border = ... }
+static std::vector<std::string> splitKeyFull(const std::string &key) {
+  std::vector<std::string> parts;
+  std::string cur;
+  for (char c : key) {
+    if (c == ':' || c == '.') {
+      if (!cur.empty()) { parts.push_back(cur); cur.clear(); }
+    } else {
+      cur += c;
+    }
+  }
+  if (!cur.empty()) parts.push_back(cur);
+  return parts;
+}
 
-static void insertIntoTree(nlohmann::json &root, const std::vector<std::string> &parts,
-                           const std::string &value) {
+// Navigate/create the nested JSON object path and return a reference to the leaf parent.
+// If an existing leaf node (with __v) is in the way, it is replaced with an object.
+static nlohmann::json &treeNode(nlohmann::json &root,
+                                 const std::vector<std::string> &parts) {
   nlohmann::json *node = &root;
   for (size_t i = 0; i + 1 < parts.size(); ++i) {
-    if (!node->contains(parts[i]) || !(*node)[parts[i]].is_object())
-      (*node)[parts[i]] = nlohmann::json::object();
-    node = &(*node)[parts[i]];
+    auto &child = (*node)[parts[i]];
+    if (!child.is_object() || child.contains("__v"))
+      child = nlohmann::json::object();
+    node = &child;
   }
-  (*node)[parts.back()] = value;
+  return *node;
+}
+
+// Insert a plain string value (hypr / nested-json formats).
+static void insertIntoTree(nlohmann::json &root, const std::vector<std::string> &parts,
+                           const std::string &value) {
+  treeNode(root, parts)[parts.back()] = value;
+}
+
+// Insert a typed leaf for Lua emission: {"__v": value, "__t": type}.
+static void insertIntoTreeTyped(nlohmann::json &root,
+                                 const std::vector<std::string> &parts,
+                                 const std::string &value,
+                                 const std::string &type) {
+  treeNode(root, parts)[parts.back()] = {{"__v", value}, {"__t", type}};
 }
 
 // Emit hyprland config format (nested sections)
@@ -130,15 +160,82 @@ static void emitHypr(std::ostream &out, const nlohmann::json &node,
   }
 }
 
-// Emit Lua table format
+// Convert a stored value string to its proper Lua literal.
+static std::string toLuaLiteral(const std::string &value, const std::string &type) {
+  if (type == "BOOL")
+    // Config-sourced: hyprlang emits INT "0"/"1"; fallback: already "true"/"false"
+    return (value == "1" || value == "true") ? "true" : "false";
+
+  if (type == "INT" || type == "FLOAT")
+    return value.empty() ? "0" : value;
+
+  if (type == "VECTOR") {
+    // "x, y" → {x, y}
+    auto comma = value.find(',');
+    if (comma != std::string::npos) {
+      std::string x = value.substr(0, comma);
+      std::string y = value.substr(comma + 1);
+      while (!x.empty() && x.front() == ' ') x.erase(x.begin());
+      while (!x.empty() && x.back()  == ' ') x.pop_back();
+      while (!y.empty() && y.front() == ' ') y.erase(y.begin());
+      while (!y.empty() && y.back()  == ' ') y.pop_back();
+      return "{" + x + ", " + y + "}";
+    }
+    return "{0, 0}";
+  }
+
+  if (type == "GRADIENT") {
+    // Format: "color1 color2 ... [Ndeg]"
+    // Tokens are space-separated; rgba/0x colors have no internal spaces.
+    std::vector<std::string> tokens;
+    std::istringstream iss(value);
+    std::string tok;
+    while (iss >> tok) tokens.push_back(tok);
+
+    if (tokens.empty()) return nlohmann::json(value).dump();
+
+    // Check for trailing angle token (e.g. "45deg")
+    int angle = -1;
+    if (!tokens.empty()) {
+      const std::string &last = tokens.back();
+      if (last.size() >= 4 && last.substr(last.size() - 3) == "deg") {
+        try {
+          angle = std::stoi(last.substr(0, last.size() - 3));
+          tokens.pop_back();
+        } catch (...) {}
+      }
+    }
+
+    if (tokens.size() == 1 && angle < 0)
+      return nlohmann::json(tokens[0]).dump(); // single color — plain string
+
+    std::string result = "{colors = {";
+    for (size_t i = 0; i < tokens.size(); ++i) {
+      if (i > 0) result += ", ";
+      result += nlohmann::json(tokens[i]).dump();
+    }
+    result += "}";
+    if (angle >= 0) result += ", angle = " + std::to_string(angle);
+    result += "}";
+    return result;
+  }
+
+  // STRING_SHORT, STRING_LONG, COLOR, CHOICE → quoted string
+  return nlohmann::json(value).dump();
+}
+
+// Emit Lua table format with native types.
 static void emitLua(std::ostream &out, const nlohmann::json &node,
                     const std::string &indent = "  ") {
   for (auto it = node.begin(); it != node.end(); ++it) {
-    if (it.value().is_string()) {
-      out << indent << it.key() << " = " << nlohmann::json(it.value()).dump() << ",\n";
-    } else if (it.value().is_object()) {
+    const auto &val = it.value();
+    if (val.is_object() && val.contains("__v") && val.contains("__t")) {
+      out << indent << it.key() << " = "
+          << toLuaLiteral(val["__v"].get<std::string>(), val["__t"].get<std::string>())
+          << ",\n";
+    } else if (val.is_object()) {
       out << indent << it.key() << " = {\n";
-      emitLua(out, it.value(), indent + "  ");
+      emitLua(out, val, indent + "  ");
       out << indent << "},\n";
     }
   }
@@ -282,8 +379,9 @@ int runDumpMode(const std::string &configFilePath,
   } else if (exportFormat == "lua") {
     nlohmann::json tree = nlohmann::json::object();
     for (const auto &item : output) {
-      insertIntoTree(tree, splitKey(item["key"].get<std::string>()),
-                     item["value"].get<std::string>());
+      insertIntoTreeTyped(tree, splitKeyFull(item["key"].get<std::string>()),
+                          item["value"].get<std::string>(),
+                          item["type"].get<std::string>());
     }
     std::cout << "return {\n";
     emitLua(std::cout, tree);
