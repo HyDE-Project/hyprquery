@@ -4,6 +4,7 @@
 #include "SourceHandler.hpp"
 
 #include <any>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <hyprlang.hpp>
@@ -143,6 +144,35 @@ static void insertIntoTreeTyped(nlohmann::json &root,
   treeNode(root, parts)[parts.back()] = {{"__v", value}, {"__t", type}};
 }
 
+static std::vector<std::string> tokenizeGradient(const std::string &value) {
+  std::vector<std::string> tokens;
+  std::string current;
+  int parenDepth = 0;
+
+  for (char ch : value) {
+    if (std::isspace(static_cast<unsigned char>(ch)) && parenDepth == 0) {
+      if (!current.empty()) {
+        tokens.push_back(current);
+        current.clear();
+      }
+      continue;
+    }
+
+    current += ch;
+
+    if (ch == '(') {
+      ++parenDepth;
+    } else if (ch == ')' && parenDepth > 0) {
+      --parenDepth;
+    }
+  }
+
+  if (!current.empty())
+    tokens.push_back(current);
+
+  return tokens;
+}
+
 // Emit hyprland config format (nested sections)
 static void emitHypr(std::ostream &out, const nlohmann::json &node,
                      const std::string &indent = "") {
@@ -185,12 +215,9 @@ static std::string toLuaLiteral(const std::string &value, const std::string &typ
   }
 
   if (type == "GRADIENT") {
-    // Format: "color1 color2 ... [Ndeg]"
-    // Tokens are space-separated; rgba/0x colors have no internal spaces.
-    std::vector<std::string> tokens;
-    std::istringstream iss(value);
-    std::string tok;
-    while (iss >> tok) tokens.push_back(tok);
+    // Format: "color1 color2 ... [Ndeg]".
+    // Colors may be rgba(...) tokens that contain internal whitespace.
+    std::vector<std::string> tokens = tokenizeGradient(value);
 
     if (tokens.empty()) return nlohmann::json(value).dump();
 

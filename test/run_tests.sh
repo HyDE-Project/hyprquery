@@ -192,6 +192,18 @@ else
   assert_contains "dump --export lua: gradient value"    'colors = {'        "$dump_lua"
   assert_contains "dump --export lua: string value"      'gaps_in = "3"'     "$dump_lua"
 
+  gradient_rgba_conf="$SCRIPT_DIR/config/gradient-rgba.conf"
+  dump_lua_rgba="$(run_hyq --schema "$SCHEMA" --dump --export lua "$gradient_rgba_conf")"
+  assert_contains "dump --export lua: rgba gradient kept intact" \
+    '"rgba(228, 228, 230, 1)"' "$dump_lua_rgba"
+  assert_contains "dump --export lua: rgba gradient angle kept intact" \
+    'angle = 90' "$dump_lua_rgba"
+  if [[ "$dump_lua_rgba" == *'"rgba(228,"'* ]]; then
+    fail "dump --export lua: rgba gradient not split" "no split rgba token" "$dump_lua_rgba"
+  else
+    pass "dump --export lua: rgba gradient not split"
+  fi
+
   # --export nested-json
   dump_nj="$(run_hyq --schema "$SCHEMA" --dump --export nested-json "$CONF")"
   assert_contains "dump --export nested-json: top-level object" '"general"'        "$dump_nj"
